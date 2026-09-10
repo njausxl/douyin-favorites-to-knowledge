@@ -1,0 +1,584 @@
+diff --git a/src/douyin_favorites_knowledge/browser_collector.py b/src/douyin_favorites_knowledge/browser_collector.py
+index 34d72bd..2360370 100644
+--- a/src/douyin_favorites_knowledge/browser_collector.py
++++ b/src/douyin_favorites_knowledge/browser_collector.py
+@@ -67,6 +67,20 @@ def _source_item(raw: dict[str, Any], observed_at: str, source: str = "collectio
+         "source": source,
+         "play_url": str(raw.get("play_url") or "").strip(),
+     }
++    images = raw.get("images")
++    if isinstance(images, list):
++        cleaned = [str(url).strip() for url in images if isinstance(url, str) and str(url).strip()]
++        if cleaned:
++            item["images"] = cleaned
++    # Long-form articles (aweme_type 163) carry their body in article_info. The list
++    # endpoint returns a truncated preview; _enrich_article replaces it with the full
++    # markdown pulled from the detail endpoint.
++    article_id = str(raw.get("article_id") or "").strip()
++    if article_id:
++        item["article_id"] = article_id
++    article_preview = str(raw.get("article_preview") or "").strip()
++    if article_preview:
++        item["article"] = {"markdown": article_preview, "article_id": article_id, "title": title}
+     try:
+         duration = float(raw.get("duration_seconds") or 0)
+     except (TypeError, ValueError):
+@@ -76,6 +90,58 @@ def _source_item(raw: dict[str, Any], observed_at: str, source: str = "collectio
+     return item
+ 
+ 
++ARTICLE_DETAIL_JS = r"""async ({aweme}) => {
++    const common = {
++        device_platform: 'webapp',
++        aid: '6383',
++        channel: 'channel_pc_web',
++        pc_client_type: '1',
++        version_code: '170400',
++        version_name: '17.4.0',
++        cookie_enabled: 'true',
++        platform: 'PC',
++    };
++    const url = 'https://www.douyin.com/aweme/v1/web/aweme/detail/?' +
++        new URLSearchParams(Object.assign({}, common, {aweme_id: aweme})).toString();
++    const response = await fetch(url, {method: 'GET', credentials: 'include'});
++    if (!response.ok) return {ok: false, http_status: response.status};
++    const data = await response.json();
++    const detail = data.aweme_detail;
++    if (!detail) return {ok: false, status_code: data.status_code};
++    const info = detail.article_info || {};
++    let content = null;
++    try { content = JSON.parse(info.article_content || '{}'); } catch (e) { content = null; }
++    return {
++        ok: true,
++        aweme_id: String(detail.aweme_id || ''),
++        article_id: info.article_id || '',
++        article_title: info.article_title || '',
++        markdown: (content && content.markdown) || '',
++    };
++}"""
++
++
++async def _enrich_article(
++    collector: "BrowserCollector", item: dict[str, Any]
++) -> dict[str, Any]:
++    """Replace a truncated article preview with the full markdown from the detail API."""
++    try:
++        payload = await collector.fetch_article(item["aweme_id"])
++    except Exception:
++        return item
++    if not isinstance(payload, dict) or not payload.get("ok"):
++        return item
++    markdown = str(payload.get("markdown") or "").strip()
++    if not markdown:
++        return item
++    item["article"] = {
++        "markdown": markdown,
++        "article_id": str(payload.get("article_id") or item.get("article_id") or ""),
++        "title": str(payload.get("article_title") or "").strip() or item.get("title", ""),
++    }
++    return item
++
++
+ class BrowserCollector:
+     def __init__(self, profile_dir: Path | None = None, channel: str | None = None, source: str = "collection"):
+         if source not in SOURCES:
+@@ -208,6 +274,28 @@ class BrowserCollector:
+                         description: item.desc || '',
+                         author: item.author ? item.author.nickname || '' : '',
+                         play_url: item.video && item.video.play_addr && item.video.play_addr.url_list ? item.video.play_addr.url_list[0] || '' : '',
++                        // Image-post (图文) galleries: keep the still-image URLs so the OCR
++                        // stage can recover text that only exists inside the images.
++                        images: (item.images || []).map(function (img) {
++                          if (!img || !img.url_list || !img.url_list.length) return '';
++                          var list = img.url_list;
++                          var best = '';
++                          for (var i = 0; i < list.length; i++) {
++                            var u = list[i] || '';
++                            if (u.indexOf('.image') !== -1 || u.indexOf('.webp') !== -1) { best = u; break; }
++                          }
++                          return best || list[0] || '';
++                        }).filter(function (u) { return u; }),
++                        // Long-form articles (aweme_type 163): the list API truncates the body,
++                        // so keep the preview + article id here; the collector then asks the
++                        // detail endpoint for the full markdown.
++                        article_id: (item.article_info && item.article_info.article_id) || '',
++                        article_preview: (function () {
++                          try {
++                            var c = JSON.parse((item.article_info || {}).article_content || '{}');
++                            return c.markdown || '';
++                          } catch (e) { return ''; }
++                        })(),
+                         // Prefer original-sound style audio only. Commercial BGM music.play_url is often not speech.
+                         audio_url: (function () {
+                           const music = item.music || {};
+@@ -226,6 +314,15 @@ class BrowserCollector:
+             raise ValueError("Douyin returned an invalid collection response")
+         return result
+ 
++    async def fetch_article(self, aweme_id: str) -> dict[str, Any]:
++        """Fetch the full long-form article body for one aweme_id."""
++        if self._page is None:
++            raise ValueError("browser is not open")
++        result = await self._page.evaluate(ARTICLE_DETAIL_JS, {"aweme": aweme_id})
++        if not isinstance(result, dict):
++            raise ValueError("Douyin returned an invalid article response")
++        return result
++
+ 
+ async def _login(*, timeout_seconds: int, channel: str | None, source: str = "collection") -> dict[str, Any]:
+     collector = BrowserCollector(channel=channel, source=source)
+@@ -334,6 +431,8 @@ async def _collect(
+                     continue
+                 item = _source_item(raw, observed_at, source)
+                 if item is not None:
++                    if item.get("article_id"):
++                        item = await _enrich_article(collector, item)
+                     collected[item["aweme_id"]] = item
+                     if len(collected) >= max_items:
+                         break
+diff --git a/src/douyin_favorites_knowledge/cli.py b/src/douyin_favorites_knowledge/cli.py
+index a30bd02..11b4f37 100644
+--- a/src/douyin_favorites_knowledge/cli.py
++++ b/src/douyin_favorites_knowledge/cli.py
+@@ -25,6 +25,7 @@ from .workflow import (
+     atomic_write_text,
+     build_approval,
+     build_review,
++    load_ledger,
+     promote,
+     read_input,
+     read_review,
+@@ -452,6 +453,15 @@ def _finish_bailian_budget(config: Config, reservation_id: int, success: bool) -
+         connection.commit()
+ 
+ 
++def _ledger_has(known: dict[str, str], item: dict) -> bool:
++    """True when this source item is already recorded in the promotion ledger."""
++    aweme_id = str(item.get("aweme_id") or "")
++    if not aweme_id:
++        return False
++    source = str(item.get("source") or "collection")
++    return f"{source}:{aweme_id}" in known or aweme_id in known
++
++
+ def _apply_configured_stages(raw_items: list[dict], config: Config) -> list[dict]:
+     for stage in config.enrichment_stages():
+         if stage.name == "transcription" and stage.provider == "siliconflow":
+@@ -460,9 +470,18 @@ def _apply_configured_stages(raw_items: list[dict], config: Config) -> list[dict
+                 raise ValueError(
+                     f"SiliconFlow transcription is not ready: {', '.join(readiness['missing'])}"
+                 )
+-            raw_items = _apply_enricher(
+-                raw_items, "", stage.context(config.mode), transcribe_with_siliconflow
+-            )
++            context = stage.context(config.mode)
++            known = load_ledger(config)
++            enriched: list[dict] = []
++            for raw in raw_items:
++                # Already-promoted image posts / long-form articles: the stored note is
++                # authoritative, and re-deriving a hash would trip the "promoted item
++                # changed" guard (their original ASR noise no longer reproduces now that
++                # we skip ASR). Drop them instead of paying for a redundant read.
++                if (raw.get("images") or raw.get("article")) and _ledger_has(known, raw):
++                    continue
++                enriched.append(_apply_enricher([raw], "", context, transcribe_with_siliconflow)[0])
++            raw_items = enriched
+         elif stage.name == "transcription" and stage.provider == "bailian":
+             readiness = check_bailian_environment()
+             if not readiness["ready"]:
+diff --git a/src/douyin_favorites_knowledge/siliconflow.py b/src/douyin_favorites_knowledge/siliconflow.py
+index 6f556e6..f844e45 100644
+--- a/src/douyin_favorites_knowledge/siliconflow.py
++++ b/src/douyin_favorites_knowledge/siliconflow.py
+@@ -34,6 +34,202 @@ TEMP_PREFIX = "douyin-sf-asr-"
+ DEFAULT_BITRATE = "64k"
+ DEFAULT_SAMPLE_RATE = "16000"
+ 
++# --- Image-post (图文) OCR via a vision LLM -------------------------------
++# Image posts carry their real content inside the pictures. Douyin's
++# ``video.play_addr`` for these items is only the background-music MP3, so ASR
++# hallucinates noise. When an item exposes an ``images`` gallery we skip ASR
++# and read the pictures with a vision model instead.
++DEFAULT_OCR_MODEL = "Qwen/Qwen3-VL-30B-A3B-Instruct"
++DEFAULT_OCR_ENDPOINT = "https://api.siliconflow.cn/v1/chat/completions"
++OCR_TEMP_PREFIX = "douyin-sf-ocr-"
++MAX_IMAGE_BYTES = 32 * 1024 * 1024
++DEFAULT_OCR_CONCURRENCY = 4
++OCR_PROMPT = (
++    "请逐字提取这张图片中的所有文字，严格保持原有顺序与换行。"
++    "只输出文字本身，不要任何解释、标题或前后缀。"
++)
++
++
++def _ocr_settings() -> tuple[bool, str, int, int]:
++    """Read OCR tunables from the environment: (enabled, model, max_images, workers)."""
++    raw_enabled = (os.environ.get("DOUYIN_OCR_ENABLED") or "1").strip().lower()
++    enabled = raw_enabled not in {"0", "false", "no", "off"}
++    model = (os.environ.get("DOUYIN_OCR_MODEL") or DEFAULT_OCR_MODEL).strip() or DEFAULT_OCR_MODEL
++    try:
++        max_images = max(0, int((os.environ.get("DOUYIN_OCR_MAX_IMAGES") or "0").strip()))
++    except ValueError:
++        max_images = 0
++    try:
++        workers = min(8, max(1, int((os.environ.get("DOUYIN_OCR_CONCURRENCY") or str(DEFAULT_OCR_CONCURRENCY)).strip())))
++    except ValueError:
++        workers = DEFAULT_OCR_CONCURRENCY
++    return enabled, model, max_images, workers
++
++
++def _image_urls(item: dict[str, Any]) -> list[str]:
++    raw = item.get("images")
++    if not isinstance(raw, list):
++        return []
++    seen: set[str] = set()
++    out: list[str] = []
++    for value in raw:
++        url = str(value or "").strip()
++        if not url or url in seen:
++            continue
++        seen.add(url)
++        out.append(url)
++    return out
++
++
++def _image_suffix(url: str) -> str:
++    path = url.split("?", 1)[0].lower()
++    for ext in (".jpeg", ".webp", ".png", ".jpg", ".heic", ".avif"):
++        if path.endswith(ext):
++            return ext
++    return ".jpg"
++
++
++def _download_image(url: str, destination: Path, max_bytes: int) -> bool:
++    request = urllib.request.Request(
++        url,
++        headers={
++            "User-Agent": (
++                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
++                "AppleWebKit/537.36 (KHTML, like Gecko) "
++                "Chrome/120.0.0.0 Safari/537.36"
++            ),
++            "Referer": "https://www.douyin.com/",
++            "Origin": "https://www.douyin.com",
++            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
++        },
++    )
++    try:
++        with urllib.request.urlopen(request, timeout=120) as response, destination.open("wb") as output:
++            total = 0
++            while True:
++                chunk = response.read(512 * 1024)
++                if not chunk:
++                    break
++                total += len(chunk)
++                if total > max_bytes:
++                    return False
++                output.write(chunk)
++    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
++        return False
++    return destination.exists() and destination.stat().st_size > 0
++
++
++def _ocr_image(path: Path, model: str, api_key: str, endpoint: str) -> str:
++    import base64
++    import json
++
++    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
++    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
++    payload = {
++        "model": model,
++        "messages": [
++            {
++                "role": "user",
++                "content": [
++                    {"type": "text", "text": OCR_PROMPT},
++                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{encoded}"}},
++                ],
++            }
++        ],
++        "temperature": 0,
++        "max_tokens": 4096,
++    }
++    request = urllib.request.Request(
++        endpoint,
++        data=json.dumps(payload).encode("utf-8"),
++        method="POST",
++        headers={
++            "Authorization": f"Bearer {api_key}",
++            "Content-Type": "application/json",
++            "User-Agent": "douyin-favorites-to-knowledge/siliconflow",
++        },
++    )
++    with urllib.request.urlopen(request, timeout=300) as response:
++        data = json.loads(response.read().decode("utf-8", errors="replace"))
++    if isinstance(data, dict):
++        choices = data.get("choices")
++        if isinstance(choices, list) and choices and isinstance(choices[0], dict):
++            message = choices[0].get("message")
++            content = message.get("content") if isinstance(message, dict) else None
++            if isinstance(content, str) and content.strip():
++                return content.strip()
++    return ""
++
++
++def _transcribe_images(item: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
++    """Read an image-post gallery with a vision LLM; never touches the BGM audio."""
++    enabled, model, max_images, workers = _ocr_settings()
++    source = "siliconflow_vlm_ocr"
++    if not enabled:
++        return {"transcript": "", "transcript_source": source, "transcript_status": "skipped"}
++
++    urls = _image_urls(item)
++    if max_images and len(urls) > max_images:
++        urls = urls[:max_images]
++    if not urls:
++        return {"transcript": "", "transcript_source": source, "transcript_status": "unavailable"}
++
++    api_key = os.environ[KEY_NAME].strip()
++    endpoint = str(os.environ.get("SILICONFLOW_OCR_URL") or DEFAULT_OCR_ENDPOINT).strip()
++    ctx = context if isinstance(context, dict) else {}
++    options = ctx.get("options") if isinstance(ctx.get("options"), dict) else {}
++    model = str(options.get("ocr_model") or ctx.get("ocr_model") or model).strip() or DEFAULT_OCR_MODEL
++
++    from concurrent.futures import ThreadPoolExecutor
++
++    try:
++        with tempfile.TemporaryDirectory(prefix=OCR_TEMP_PREFIX) as temp_dir:
++            root = Path(temp_dir)
++
++            def _read(index_url: tuple[int, str]) -> tuple[int, bool, str]:
++                index, url = index_url
++                destination = root / f"{index:03d}{_image_suffix(url)}"
++                if not _download_image(url, destination, MAX_IMAGE_BYTES):
++                    return index, False, ""
++                try:
++                    return index, True, _ocr_image(destination, model, api_key, endpoint)
++                except (OSError, TimeoutError, urllib.error.HTTPError, urllib.error.URLError):
++                    return index, True, ""
++
++            results: dict[int, tuple[bool, str]] = {}
++            with ThreadPoolExecutor(max_workers=workers) as pool:
++                for index, fetched, text in pool.map(_read, list(enumerate(urls, 1))):
++                    results[index] = (fetched, text)
++
++            if not any(fetched for fetched, _ in results.values()):
++                return {"transcript": "", "transcript_source": source, "transcript_status": "failed"}
++
++            blocks: list[str] = []
++            ok = 0
++            for index in range(1, len(urls) + 1):
++                text = (results.get(index, (False, ""))[1] or "").strip()
++                if text:
++                    ok += 1
++                    blocks.append(f"### 图 {index}\n\n{text}")
++                else:
++                    blocks.append(f"### 图 {index}\n\n(未识别到文字)")
++            body = "\n\n".join(blocks).strip()
++            return {
++                "transcript": "",
++                "transcript_source": source,
++                "transcript_status": "success",
++                "ocr": {
++                    "model": model,
++                    "text": body,
++                    "image_count": len(urls),
++                    "images_ok": ok,
++                },
++            }
++    except (OSError, subprocess.TimeoutExpired, TimeoutError):
++        return {"transcript": "", "transcript_source": source, "transcript_status": "failed"}
++    except Exception:
++        return {"transcript": "", "transcript_source": source, "transcript_status": "failed"}
++
+ 
+ def check_environment() -> dict[str, Any]:
+     """Check prerequisites only; never call the API during health checks."""
+@@ -206,12 +402,32 @@ def _upload_transcribe(path: Path, api_key: str, model: str, endpoint: str) -> s
+     return ""
+ 
+ 
+-def transcribe(item: dict[str, Any], context: dict[str, Any]) -> dict[str, str]:
+-    """Download video/play with Referer, extract audio, transcribe via SiliconFlow."""
++def transcribe(item: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
++    """Transcribe one item.
++
++    Image posts (图文) are read with a vision LLM, because Douyin fills their
++    ``video.play_addr`` with the background-music MP3 and ASR would hallucinate
++    noise. Everything else keeps the SenseVoice audio path.
++    """
++    article = item.get("article")
++    if isinstance(article, dict) and str(article.get("markdown") or "").strip():
++        # Long-form articles (aweme_type 163) already carry their body as markdown,
++        # and Douyin fills video.play_addr with the background-music MP3. Skip ASR
++        # entirely so the BGM can never pollute the note.
++        return {
++            "transcript": "",
++            "transcript_source": "article",
++            "transcript_status": "not_requested",
++            "article": article,
++        }
++
+     readiness = check_environment()
+     if not readiness["ready"]:
+         raise ValueError(f"SiliconFlow transcription is not ready: {', '.join(readiness['missing'])}")
+ 
++    if _image_urls(item):
++        return _transcribe_images(item, context)
++
+     candidates = _candidate_urls(item)
+     if not candidates:
+         return _failed("unavailable")
+diff --git a/src/douyin_favorites_knowledge/workflow.py b/src/douyin_favorites_knowledge/workflow.py
+index 39ceb20..56e8b9f 100644
+--- a/src/douyin_favorites_knowledge/workflow.py
++++ b/src/douyin_favorites_knowledge/workflow.py
+@@ -69,6 +69,55 @@ def _analysis(raw: dict[str, Any]) -> dict[str, str]:
+     return result
+ 
+ 
++def _ocr_payload(raw: dict[str, Any]) -> dict[str, Any]:
++    """Normalize the optional OCR payload produced by the image-post reader.
++
++    Deliberately kept out of ``content_sha256`` so re-running OCR with another
++    model (or slightly different wording) never triggers a
++    "promoted item changed" error.
++    """
++    value = raw.get("ocr")
++    if value is None:
++        return {}
++    if not isinstance(value, dict):
++        raise ValueError("item ocr must be an object")
++    text = value.get("text")
++    if not isinstance(text, str) or not text.strip():
++        return {}
++    result: dict[str, Any] = {"text": text.replace("\r\n", "\n").replace("\r", "\n").strip()}
++    model = value.get("model")
++    if isinstance(model, str) and model.strip():
++        result["model"] = model.strip()
++    for key in ("image_count", "images_ok"):
++        count = value.get(key)
++        if isinstance(count, int) and not isinstance(count, bool) and count >= 0:
++            result[key] = count
++    return result
++
++
++def _article_payload(raw: dict[str, Any]) -> dict[str, Any]:
++    """Normalize the optional long-form article payload (Douyin aweme_type 163).
++
++    Kept out of ``content_sha256`` for the same reason as ``ocr``: re-fetching the
++    body, or a marginally different markdown serialization, must never trip the
++    "promoted item changed" guard.
++    """
++    value = raw.get("article")
++    if not isinstance(value, dict):
++        return {}
++    markdown = value.get("markdown")
++    if not isinstance(markdown, str) or not markdown.strip():
++        return {}
++    result: dict[str, Any] = {
++        "markdown": markdown.replace("\r\n", "\n").replace("\r", "\n").strip()
++    }
++    for key in ("title", "article_id"):
++        text = value.get(key)
++        if isinstance(text, str) and text.strip():
++            result[key] = text.strip()
++    return result
++
++
+ def normalize_item(raw: dict[str, Any]) -> dict[str, Any]:
+     if not isinstance(raw, dict):
+         raise ValueError("each source item must be an object")
+@@ -103,6 +152,12 @@ def normalize_item(raw: dict[str, Any]) -> dict[str, Any]:
+     if analysis:
+         item["analysis"] = analysis
+     item["content_sha256"] = sha256_bytes(canonical_json(item))
++    ocr = _ocr_payload(raw)
++    if ocr:
++        item["ocr"] = ocr
++    article = _article_payload(raw)
++    if article:
++        item["article"] = article
+     item["note"] = render_note(item)
+     return item
+ 
+@@ -129,14 +184,46 @@ def render_note(item: dict[str, Any]) -> str:
+     if analysis.get("content_summary"):
+         lines.extend(["## 要点", "", analysis["content_summary"], ""])
+ 
+-    if item["description"] or item["transcript"] or item["transcript_status"] != "not_requested":
++    ocr = item.get("ocr") if isinstance(item.get("ocr"), dict) else {}
++    ocr_text = str(ocr.get("text") or "").strip()
++    article = item.get("article") if isinstance(item.get("article"), dict) else {}
++    article_text = str(article.get("markdown") or "").strip()
++    if (
++        item["description"]
++        or item["transcript"]
++        or item["transcript_status"] != "not_requested"
++        or ocr_text
++        or article_text
++    ):
+         lines.extend(["## 原始材料", ""])
+         if item["description"]:
+             lines.extend(["### 原始描述", "", item["description"], ""])
+         if item["transcript"]:
+             lines.extend(["### 转录", "", item["transcript"], ""])
+-        elif item["transcript_status"] != "not_requested":
++        elif not ocr_text and not article_text and item["transcript_status"] != "not_requested":
+             lines.extend(["### 转录", "", "未获得语音转录；上方原始描述不是逐字稿。", ""])
++    if ocr_text:
++        lines.extend(["## 图片文字 (OCR)", ""])
++        meta: list[str] = []
++        if isinstance(ocr.get("image_count"), int):
++            meta.append(f"共 {ocr['image_count']} 张图")
++        if isinstance(ocr.get("images_ok"), int):
++            meta.append(f"识别成功 {ocr['images_ok']} 张")
++        if ocr.get("model"):
++            meta.append(str(ocr["model"]))
++        if meta:
++            lines.extend(["> " + " · ".join(meta), ""])
++        lines.extend([ocr_text, ""])
++    if article_text:
++        lines.extend(["## 文章正文", ""])
++        article_meta: list[str] = []
++        if article.get("title"):
++            article_meta.append(str(article["title"]))
++        if article.get("article_id"):
++            article_meta.append(f"文章 {article['article_id']}")
++        if article_meta:
++            lines.extend(["> " + " · ".join(article_meta), ""])
++        lines.extend([article_text, ""])
+ 
+     analysis_sections = (
+         ("value_judgment", "价值判断"),
+@@ -259,7 +346,7 @@ def validate_review(review: dict[str, Any]) -> list[dict[str, Any]]:
+             "content_sha256",
+             "note",
+         }
+-        optional = {"analysis"}
++        optional = {"analysis", "ocr", "article"}
+         if set(item) - optional != required or not set(item) <= required | optional:
+             raise ValueError(f"review item {index} fields do not match schema")
+         aweme_id = item["aweme_id"]
+@@ -272,6 +359,12 @@ def validate_review(review: dict[str, Any]) -> list[dict[str, Any]]:
+             if normalized_analysis != item["analysis"]:
+                 raise ValueError(f"invalid analysis fields for {aweme_id}")
+             base["analysis"] = item["analysis"]
++        if "ocr" in item:
++            if _ocr_payload({"ocr": item["ocr"]}) != item["ocr"]:
++                raise ValueError(f"invalid ocr fields for {aweme_id}")
++        if "article" in item:
++            if _article_payload({"article": item["article"]}) != item["article"]:
++                raise ValueError(f"invalid article fields for {aweme_id}")
+         expected_hash = sha256_bytes(canonical_json(base))
+         if item["content_sha256"] != expected_hash:
+             raise ValueError(f"content hash mismatch for {aweme_id}")
+@@ -404,7 +497,8 @@ def promote(
+             for item in pending:
+                 staged = staging / f"{item['source']}-{item['aweme_id']}.md"
+                 staged.write_text(item["note"], encoding="utf-8")
+-                with staged.open("rb") as handle:
++                with staged.open("ab") as handle:
++                    handle.flush()
+                     os.fsync(handle.fileno())
+             for item in pending:
+                 os.replace(

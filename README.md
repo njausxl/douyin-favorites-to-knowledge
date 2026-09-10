@@ -1,5 +1,30 @@
 # 抖音收藏转本地知识库
 
+> ## 🔀 本仓库是 fork 修改版
+>
+> **Fork 自 [tars1230/douyin-favorites-to-knowledge](https://github.com/tars1230/douyin-favorites-to-knowledge)**
+> （Gitee 镜像：[gitee.com/tars123/douyin-favorites-to-knowledge](https://gitee.com/tars123/douyin-favorites-to-knowledge)），基于上游 **v2.3.0**。
+>
+> 本 fork 补上了上游缺失的**两条正文通道**：
+>
+> - 🖼️ **图文帖 OCR** —— 上游只有语音识别（ASR）。但图文帖的 `video.play_addr` 其实是**背景音乐 MP3**，ASR 对着纯音乐跑只会产出幻觉噪声（`🎼你生看。`），状态却标成 `success`；**图里的正文一个字都抓不到**。
+> - 📄 **长文正文抓取** —— 抖音长文（`aweme_type=163`）的正文不在音轨里，且收藏列表接口返回的 `article_info` 是**截断在 499 字的预览**，必须走 `aweme/detail` 才能取到全文。
+>
+> 改动上游 **4 个文件**（`+437 / −9`），以 commit 形式提交，可直接 diff 查看改了什么。
+>
+> | 内容 | 位置 |
+> | --- | --- |
+> | 对上游的补丁 | [`patches/0001-ocr-and-article-support.patch`](patches/0001-ocr-and-article-support.patch) |
+> | 技能包（拷进 skills 目录即可用） | [`extras/douyin-image-post-ocr/`](extras/douyin-image-post-ocr/) |
+> | 实测报告与架构图 | [`docs/`](docs/) |
+> | 完整落地过程长文 | [`posts/`](posts/) |
+>
+> 独立技能包仓库：<https://github.com/njausxl/douyin-image-post-ocr>
+>
+> **实测规模**：932 条收藏 → 154 条图文帖 + 38 条长文；知识库 306 → **366** 条笔记，补回约 **24 万字**正文。视觉模型用 `Qwen/Qwen3-VL-30B-A3B-Instruct`；长文通道零 API 成本。
+>
+> 上游代码版权归原作者所有（MIT）。本 fork 的新增内容同样以 MIT 发布。
+
 刷到有用的视频就收藏。需要整理时运行一次同步，新收藏会变成可搜索的本地 Markdown 笔记。默认采集**收藏**；用户明确说“喜欢/点赞”时才采集喜欢列表，二者绝不混用。
 
 [![CI](https://github.com/tars1230/douyin-favorites-to-knowledge/actions/workflows/ci.yml/badge.svg)](https://github.com/tars1230/douyin-favorites-to-knowledge/actions/workflows/ci.yml)

@@ -25,6 +25,7 @@ from .workflow import (
     atomic_write_text,
     build_approval,
     build_review,
+    load_ledger,
     promote,
     read_input,
     read_review,
@@ -452,6 +453,15 @@ def _finish_bailian_budget(config: Config, reservation_id: int, success: bool) -
         connection.commit()
 
 
+def _ledger_has(known: dict[str, str], item: dict) -> bool:
+    """True when this source item is already recorded in the promotion ledger."""
+    aweme_id = str(item.get("aweme_id") or "")
+    if not aweme_id:
+        return False
+    source = str(item.get("source") or "collection")
+    return f"{source}:{aweme_id}" in known or aweme_id in known
+
+
 def _apply_configured_stages(raw_items: list[dict], config: Config) -> list[dict]:
     for stage in config.enrichment_stages():
         if stage.name == "transcription" and stage.provider == "siliconflow":
@@ -460,9 +470,18 @@ def _apply_configured_stages(raw_items: list[dict], config: Config) -> list[dict
                 raise ValueError(
                     f"SiliconFlow transcription is not ready: {', '.join(readiness['missing'])}"
                 )
-            raw_items = _apply_enricher(
-                raw_items, "", stage.context(config.mode), transcribe_with_siliconflow
-            )
+            context = stage.context(config.mode)
+            known = load_ledger(config)
+            enriched: list[dict] = []
+            for raw in raw_items:
+                # Already-promoted image posts / long-form articles: the stored note is
+                # authoritative, and re-deriving a hash would trip the "promoted item
+                # changed" guard (their original ASR noise no longer reproduces now that
+                # we skip ASR). Drop them instead of paying for a redundant read.
+                if (raw.get("images") or raw.get("article")) and _ledger_has(known, raw):
+                    continue
+                enriched.append(_apply_enricher([raw], "", context, transcribe_with_siliconflow)[0])
+            raw_items = enriched
         elif stage.name == "transcription" and stage.provider == "bailian":
             readiness = check_bailian_environment()
             if not readiness["ready"]:

@@ -67,12 +67,78 @@ def _source_item(raw: dict[str, Any], observed_at: str, source: str = "collectio
         "source": source,
         "play_url": str(raw.get("play_url") or "").strip(),
     }
+    images = raw.get("images")
+    if isinstance(images, list):
+        cleaned = [str(url).strip() for url in images if isinstance(url, str) and str(url).strip()]
+        if cleaned:
+            item["images"] = cleaned
+    # Long-form articles (aweme_type 163) carry their body in article_info. The list
+    # endpoint returns a truncated preview; _enrich_article replaces it with the full
+    # markdown pulled from the detail endpoint.
+    article_id = str(raw.get("article_id") or "").strip()
+    if article_id:
+        item["article_id"] = article_id
+    article_preview = str(raw.get("article_preview") or "").strip()
+    if article_preview:
+        item["article"] = {"markdown": article_preview, "article_id": article_id, "title": title}
     try:
         duration = float(raw.get("duration_seconds") or 0)
     except (TypeError, ValueError):
         duration = 0
     if duration > 0:
         item["duration_seconds"] = duration
+    return item
+
+
+ARTICLE_DETAIL_JS = r"""async ({aweme}) => {
+    const common = {
+        device_platform: 'webapp',
+        aid: '6383',
+        channel: 'channel_pc_web',
+        pc_client_type: '1',
+        version_code: '170400',
+        version_name: '17.4.0',
+        cookie_enabled: 'true',
+        platform: 'PC',
+    };
+    const url = 'https://www.douyin.com/aweme/v1/web/aweme/detail/?' +
+        new URLSearchParams(Object.assign({}, common, {aweme_id: aweme})).toString();
+    const response = await fetch(url, {method: 'GET', credentials: 'include'});
+    if (!response.ok) return {ok: false, http_status: response.status};
+    const data = await response.json();
+    const detail = data.aweme_detail;
+    if (!detail) return {ok: false, status_code: data.status_code};
+    const info = detail.article_info || {};
+    let content = null;
+    try { content = JSON.parse(info.article_content || '{}'); } catch (e) { content = null; }
+    return {
+        ok: true,
+        aweme_id: String(detail.aweme_id || ''),
+        article_id: info.article_id || '',
+        article_title: info.article_title || '',
+        markdown: (content && content.markdown) || '',
+    };
+}"""
+
+
+async def _enrich_article(
+    collector: "BrowserCollector", item: dict[str, Any]
+) -> dict[str, Any]:
+    """Replace a truncated article preview with the full markdown from the detail API."""
+    try:
+        payload = await collector.fetch_article(item["aweme_id"])
+    except Exception:
+        return item
+    if not isinstance(payload, dict) or not payload.get("ok"):
+        return item
+    markdown = str(payload.get("markdown") or "").strip()
+    if not markdown:
+        return item
+    item["article"] = {
+        "markdown": markdown,
+        "article_id": str(payload.get("article_id") or item.get("article_id") or ""),
+        "title": str(payload.get("article_title") or "").strip() or item.get("title", ""),
+    }
     return item
 
 
@@ -208,6 +274,28 @@ class BrowserCollector:
                         description: item.desc || '',
                         author: item.author ? item.author.nickname || '' : '',
                         play_url: item.video && item.video.play_addr && item.video.play_addr.url_list ? item.video.play_addr.url_list[0] || '' : '',
+                        // Image-post (图文) galleries: keep the still-image URLs so the OCR
+                        // stage can recover text that only exists inside the images.
+                        images: (item.images || []).map(function (img) {
+                          if (!img || !img.url_list || !img.url_list.length) return '';
+                          var list = img.url_list;
+                          var best = '';
+                          for (var i = 0; i < list.length; i++) {
+                            var u = list[i] || '';
+                            if (u.indexOf('.image') !== -1 || u.indexOf('.webp') !== -1) { best = u; break; }
+                          }
+                          return best || list[0] || '';
+                        }).filter(function (u) { return u; }),
+                        // Long-form articles (aweme_type 163): the list API truncates the body,
+                        // so keep the preview + article id here; the collector then asks the
+                        // detail endpoint for the full markdown.
+                        article_id: (item.article_info && item.article_info.article_id) || '',
+                        article_preview: (function () {
+                          try {
+                            var c = JSON.parse((item.article_info || {}).article_content || '{}');
+                            return c.markdown || '';
+                          } catch (e) { return ''; }
+                        })(),
                         // Prefer original-sound style audio only. Commercial BGM music.play_url is often not speech.
                         audio_url: (function () {
                           const music = item.music || {};
@@ -224,6 +312,15 @@ class BrowserCollector:
         )
         if not isinstance(result, dict):
             raise ValueError("Douyin returned an invalid collection response")
+        return result
+
+    async def fetch_article(self, aweme_id: str) -> dict[str, Any]:
+        """Fetch the full long-form article body for one aweme_id."""
+        if self._page is None:
+            raise ValueError("browser is not open")
+        result = await self._page.evaluate(ARTICLE_DETAIL_JS, {"aweme": aweme_id})
+        if not isinstance(result, dict):
+            raise ValueError("Douyin returned an invalid article response")
         return result
 
 
@@ -334,6 +431,8 @@ async def _collect(
                     continue
                 item = _source_item(raw, observed_at, source)
                 if item is not None:
+                    if item.get("article_id"):
+                        item = await _enrich_article(collector, item)
                     collected[item["aweme_id"]] = item
                     if len(collected) >= max_items:
                         break

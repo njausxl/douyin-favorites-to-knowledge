@@ -1,0 +1,378 @@
+<!-- 主标题 -->
+<section style="padding:0 10px;" data-page-node-id="WMCNxNGt7iEhe2BsmOu9QG">
+<h1 style="font-size:20px;font-weight:bold;color:#1a1a1a;text-align:center;line-height:1.5;letter-spacing:1px;margin:10px 0 24px 0;" data-page-node-id="ot3vX8cjWywHI7xFWBbh6l">抖音收藏 932 条，我给「自动转笔记」的流水线补上了两条看不见的通道</h1>
+
+<!-- 小节 1 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="97KR4yYjxgFuEdQVVP2rgG">一、起因：笔记转出来了，正文却是空的</h2>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="3RW65aad0pZcAqEyqmZE5p">我用一套开源工具把抖音收藏夹自动同步成 Obsidian 知识库：采集 → 筛选 → 语音转写 → 写成 Markdown 笔记。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="ZrH8AbHzN4Q3bu5v8wkBsK">跑了大半年，攒下 932 条收藏、300 多篇笔记。直到某天随机点开几篇，发现不对劲：</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="sXIBSGOo1ivxr9EUq8DD6D">有些笔记只有标题、作者、原始描述，正文一个字都没有；还有一些更离谱，正文是这种东西：</p>
+
+<!-- 代码块：噪声转录样例 -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="DobOVXm64bZ3z5Wl25Kdkb">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="DcXHcrAZPDxlQnD5lD35Fk">🎼你生看。
+🎼嗯。。🎼的都荡。The number you dialed is not in service.</section>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="t6lnaeu3krRFlCucfZTEoo">状态栏却明明白白写着 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="PsIuFXHM9Y1zEoGr2aHuT7">success</code>。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="YTZRV4MOYZBJsTbPywPaH2">查下去才发现，抖音的收藏里混着三类完全不同的内容，而这条流水线<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="cVnVqU7oAfuRP9r33m5Yx1">只认识其中一类</strong>。</p>
+
+<!-- 小节 2 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="FN6GoZaftD3GVHNAdUwMXH">二、先看结论</h2>
+
+<!-- 表格：总览 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="KBkmLCyVZGb7CX24098JrP">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="TRObQwpyez9PoEnjYROgYf">
+<tr data-page-node-id="iPsmekA8yxBKaq4aalVBVf">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="zBH3D36O0LxdLKdE4Wvwwy">指标</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="QqPnSbypDMEmMHyp9G4Ai5">数值</th>
+</tr>
+<tr data-page-node-id="RYMJFPdBeTgL4bdDDSGdHa">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="nULGBFFlRtgWiguVqhS19a">收藏总数</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="BdG4CAiH5YBaVrT9BbfRRX">932 条</td>
+</tr>
+<tr data-page-node-id="QFIDKMKC8HkVO6j76KbbhI">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="RHt3zXZ9tSixk68zaAfsZW">其中的图文帖</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="WOGxNH62oldeqkZm8R3ARC">154 条</td>
+</tr>
+<tr data-page-node-id="vMSAx1YbuKm7ux8zr9kgOv">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="tM75TMn41lSlGBi8zinVrE">其中的抖音长文</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="kAckkGkNzeewyNZKG3M5WP">38 条</td>
+</tr>
+<tr data-page-node-id="ETGHOXa01GBHQuAJIVESqs">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="ZQwWZf63n2Os5Idym51Zg9">补全后知识库笔记</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="Pv8R6WaJA5fgAh2AZofUfA">366 条</td>
+</tr>
+<tr data-page-node-id="FpiBFCMhstizBqpK8JUVjO">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="4HpqLtwrk7R7YxnGVPCA50">含「图片文字 (OCR)」段落</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="Zsg1vzYTdfAuJBUlVGs7x2">122 条</td>
+</tr>
+<tr data-page-node-id="D8wHjXJDWFXyshK4qBRwZl">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="PtSYiIceOtdjQgsdP3tKla">含「文章正文」段落</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="qIHZGe7yVldzUK5z8wojAL">35 条</td>
+</tr>
+<tr data-page-node-id="LuAr4OhcHObmOekOckv0fb">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="Hr1rmYefaQn6ds2va2kOg0">OCR + 长文提取总字数</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="R4tCtSxtMWAYpeI0xvp9hG">约 24 万字</td>
+</tr>
+</table>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="e4xzDXiT8y2P54xwkzbd3i">两大盲区已修复，并且<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="ajc3RvMzo90BxUAlAgrgHz">接进了主同步管线</strong>——以后每次同步自动处理，不需要手工干预。</p>
+
+<!-- 小节 3 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="usuvxHdj8ghF3HSq3E46nc">三、抖音的三类内容，和两个坑</h2>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="hR7310jGCkCWivp0nJd9uM">抖音收藏里的内容，按 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="pFfSeSkgiGELXH4mplU7bG">aweme_type</code> 分三类：</p>
+
+<!-- 表格：三类内容 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="8ELh8AkimAMAAPdCSwJSqd">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="KrNEyGyJ1b9xBUx1qlRfL1">
+<tr data-page-node-id="fbxTlcAHfKf0tkAUD5TPAA">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="UbOahJUJFI1i4YZpdWXNBn">类型</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="wHYoNEogLzCGB6cvOZtrYy">aweme_type</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="aLIZ7SEJITDNQnLAuQDmwg">正文在哪</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="iKuAbwsumGGJ0LlCyIpJXK">原来的处理</th>
+</tr>
+<tr data-page-node-id="CyBWcQmM5HrBHuIBpjHgDJ">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="W1fVq6vjpW7YVRmeSfFFTL">普通视频</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="C3mEqHUywvtQ4JY6fpzKnL">0</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="rBZY6Xi9GHghAbfXHzGyl2">音轨里</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="JerledDUxLP6Po1kBYlQYF">语音识别，正常</td>
+</tr>
+<tr data-page-node-id="eQeSgfEewB0nSmLQFzWq1I">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="y0uWe88rixvnrpGYcx7Oc5">图文帖</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="0DZGsGdXI2YlcmsZawDlBd">68</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="InnXtxXGudXB0QyPc6pVDO"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="tdHXPWdT9VOqCzoFk8XYFk">图片里</strong></td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="IDGAOwPhZjM7wKMUeV9Tfy">❌ 完全丢失</td>
+</tr>
+<tr data-page-node-id="LWeRnFT78JNWDHOFBvrZr5">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="FQW1mWpMg6YR2bm67kdXZ6">长文（文章）</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="SnWo9iL3vxeUTf6LWiYpPC">163</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="LrpvfuyLFqz15qs3UV8MkC"><code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="BwLf8vEuEXgOBhQHaqzQbZ">article_info</code> 里</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="UgH4vdGJKgtLCPCu3SgBwe">❌ 完全丢失</td>
+</tr>
+</table>
+</section>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="lowTXFyAUQJ1Jlw9XO7GLm">坑一：图文帖的「视频地址」其实是背景音乐</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="lPF32lZvDwswllyfxzJ0Ns">图文帖没有真正的视频流。抖音在 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="Gyf1BN2ig1nXPRpfBw6zzY">video.play_addr</code> 字段里填的是<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="cryOujMbIsoSzo1UXVmhk1">背景音乐 MP3</strong>。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="4bL6OmEx8t7zdxMPWHE2Rz">流水线不知道这件事，照常把这条 MP3 送去语音识别。ASR 对着纯音乐跑，于是输出了大段幻觉文本，状态还标成成功。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="t9AJr0XZNkOFq43mVS9va8"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="glMgcoNuyFUCxjk1A0i9es">结果就是：正文全在图片里一个字没抓，笔记里反而塞进了一堆噪声。</strong></p>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="WDg1ambfosUeHTg1CT8L1N">坑二：长文正文被截断在 499 字</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="yExAme9hIUblXsTg5JP98g">长文的正文藏在 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="2ZxMOuTfrWYfG8GX8U4CPy">article_info.article_content.markdown</code> 里。但收藏列表接口返回的这份内容<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="lUtzmRGi1E8YKRpqOSnI8s">被截断在 499 个字符</strong>——那只是预览。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="0kgv80nj8pUJMFGESHmJVV">真正完整的正文，要走另一个接口才能拿到。</p>
+
+<!-- 小节 4 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="XA02jGGxx9SwOZ2jBfssla">四、部署：先把环境搭起来</h2>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="TM0mVjuqE4MIifoqmViZEA">1. 前置条件</h3>
+
+<ul style="margin:0 0 16px 0;padding-left:22px;" data-page-node-id="seYEMHtCqFGk7HDfE9YPDD">
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="bAxAqTZMcutexuSuyYsS2m">Python 3.11 以上</li>
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="lidXB0BL0F0BKmrpxlDZRS">上游项目 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="RW00dmOrkfhD5W8u80OuI0">douyin-favorites-to-knowledge</code>（Gitee 上的 tars123 版本）</li>
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="NtBqN3VCdL2Nt8F0XqdZnD">一个 SiliconFlow 的 API Key（视觉模型按量计费）</li>
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="LQlabRvYA57kbKKmUFonm7">首次采集需要扫码登录抖音，之后复用本地浏览器 profile</li>
+</ul>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="IvkxXhgAiEOa7ZsXz7RGo9">2. 安装上游项目</h3>
+
+<!-- 代码块：安装 -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="jwnfJCNj0S2G3eWWDLdcYk">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="kRebBfo6Y0az1AO5El7RXB">git clone https://gitee.com/tars123/douyin-favorites-to-knowledge.git
+cd douyin-favorites-to-knowledge
+python -m venv .venv
+.venv/Scripts/pip install -e .</section>
+</section>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="QjrfH9fURq4gSBuT5liypu">3. 打上补丁</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="kbPOTSAqaHWdhpfkjZBzQ3">补丁改 4 个文件，核心是给采集和转写两条链路加上新通道：</p>
+
+<!-- 代码块：打补丁 -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="fs8sGigqh4fVxgP07YfvPI">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="Ljf53eMu9R757TqSPfF9tn">git apply patches/0001-ocr-and-article-support.patch</section>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="p2Hga39B08yMPNzDgAFAA4">改动一览：</p>
+
+<!-- 表格：改动一览 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="IOSlapNIpCCkmceE5cMI5q">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="0zdtU4cHvZyBvaToqOVE6h">
+<tr data-page-node-id="S7Px2khCdaOQecwbew52iu">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="HrbwSA4H5n37eHEw45CTH8">文件</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="kfzMzzIXhK9K9PxUTrFIKF">改动</th>
+</tr>
+<tr data-page-node-id="ZdZmIAIq6wGtEM5rfKCq4E">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="xaWsIe3o6KXhaHNbPs2WpA"><code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="0jjajKBS0vdSFRDpQPaOqE">browser_collector.py</code></td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="qpR2RtmpEGirkvuQ3KJNC7">采集时多取 <code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="wX09hR4WAiCwXjvIGyIrAo">item.images</code>；识别长文的 <code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="BOqMmbJXcyu9pu1Eci3OF3">article_id</code> 并调 <code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="XAaVUth73mYBJYINrU2vsJ">aweme/detail</code> 取全文</td>
+</tr>
+<tr data-page-node-id="E3GYxco66ZqJr8pTOlX8bT">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="PyRP2NeFOH9FPhBCSDaemQ"><code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="WdQHNmo1xboJqr2N31q3Mu">siliconflow.py</code></td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="K8xxiCOqKBsMlQyaXYsOHx">新增图片 OCR 通道；遇长文直接短路，不做语音识别</td>
+</tr>
+<tr data-page-node-id="oY8MmNqEWUQaUHld3m6CL8">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="HiFVYpZlOM2IeMd60lmHvH"><code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="2L8RWd89GZHRXL22AiO9hp">workflow.py</code></td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="NxxdjCEpn1CXtGv2HIPUeq">新增 <code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="TSS5SAKo5FvOEYmNJlzK1U">## 图片文字 (OCR)</code> 与 <code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="qeFvamuSYZRVmCPdH4aZPt">## 文章正文</code> 两段渲染</td>
+</tr>
+<tr data-page-node-id="cVgqlGoeEjY6VnolBLOhDR">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="6yiUAtANGrV0ZzlxN3pser"><code style="font-family:Menlo,Consolas,monospace;font-size:13px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="9qstOc6qyRsHGW1xExFQq4">cli.py</code></td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="8pRQJ2ZTLjk4WmHfJUsrma">已入库的图文帖／长文从本轮剔除，跳过重复处理</td>
+</tr>
+</table>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="RLrG2bZqavx0u9EMDzjwhS">注意：<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="NzwhBRM7rbCOVGZ9yL8otX">src/ 和 .venv/Lib/site-packages/ 下面各有一份同名文件，两份都要打补丁</strong>，否则重装依赖后改动会丢。</p>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="VVOQ0AlLsNjU6IoU5vRWtn">4. 装上技能包</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="WG9iE1dvSIkkKFy0Zv5ffJ">把 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="7BAHxmVcwLpM3gqmDnDFsi">skill/</code> 目录整体拷到你的技能目录：</p>
+
+<!-- 代码块：装技能 -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="vlx5mYXxcLaH3DjmosDf0u">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="mgshfIih7wUspGgic0SDnp">cp -r skill ~/.workbuddy/skills/douyin-image-post-ocr</section>
+</section>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="yCeDSVMjAFi4cyXpjW57PA">5. 配好环境变量</h3>
+
+<!-- 代码块：环境变量 -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="JBHzhI1HZrqMCXAJL9lob3">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="VfQOmH4P2H1DHPdnc2Dchb">export SILICONFLOW_API_KEY=你的密钥        # 只读环境变量，不落盘
+
+# 代理没开的时候，这四行必须清掉，否则会报 ECONNREFUSED
+unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy</section>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="VDHARmyzhDfDGcBCp39QLw">视觉模型默认用 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="KOMaqh1TNeiOYsAYicBVbJ">Qwen/Qwen3-VL-30B-A3B-Instruct</code>，可以用 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="tDjl7svFvIZLkHQfpJGnMT">DOUYIN_OCR_MODEL</code> 覆盖；<code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="WlnoTMsx006VOWtnK430Rz">DOUYIN_OCR_ENABLED=0</code> 可一键关掉自动 OCR。</p>
+
+<!-- 小节 5 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="TlsPdtcPrEelJQrESzVdyh">五、使用：四种进入方式</h2>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="y17IeINVGc3OFyOh553miB">方式 A：日常同步，什么都不用管</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="uTGVgxOl25Hg1vCoT9ulbr">补丁打完之后，<code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="RAXABGtATFnitYEyvjVu2n">sync</code> / <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="MslXLZIZ4biZzqEYYz3Rh6">daily</code> / <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="JlMhzMCSYCKQF8vXsi4RZy">scan</code> 三条命令都会自动分流：</p>
+
+<ul style="margin:0 0 16px 0;padding-left:22px;" data-page-node-id="R2ILWNUM1RYxIiwqUfDGpz">
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="Zp7ZPpvEs74tRpoFIKICwb">有 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="R5ihkCC7Bl0TCXNhAw32rs">images</code> 字段 → 走视觉模型 OCR</li>
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="tFHCfMzCGidOWp48rVHeIV">有 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="cQOnAlJpEuATSnFGkwPlsX">article</code> 字段 → 直接取正文，<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="QxEtQrSDzU4QFE55cMVIJs">不消耗任何 API 额度</strong></li>
+<li style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 6px 0;" data-page-node-id="AJWbzK1uZwTOw9HQYN808E">都没有 → 照旧走语音识别</li>
+</ul>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="pt4hu7RCV5JrUIq1DCp5rO">方式 B：存量图文帖批量补全</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="GIKzIzSAqhpxAJZ8nRRJCA">处理补丁上线之前入库的历史笔记，手工三步：</p>
+
+<!-- 代码块：方式 B -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="2EMGqUcVodmfM2cBu77gpe">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="Ig5HWEoswmIamNUFNiCFFv"># 第一步：扩展采集，拿到完整的图片列表
+python scripts/collect_images.py
+
+# 第二步：批量 OCR（结果可断点续跑）
+python scripts/ocr_images.py all Qwen/Qwen3-VL-30B-A3B-Instruct
+
+# 第三步：回填笔记（先预演，确认无误再加 --apply）
+python scripts/merge_ocr.py
+python scripts/merge_ocr.py --apply</section>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="KCTeIiGQtkvVMY5ECAEgDw"><code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="aLeZFoGaREq87JtTS9lMWt">--apply</code> 之前会自动整体备份知识库。</p>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="xLnJqMhDDtx4HR6H8CdD9m">方式 C：把当初被误筛的图文帖捞回来</h3>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="0Oaj5P3JmlBKBPZFBKSBag">筛选收藏时如果用了「去掉游戏娱乐」这类口径，很容易连坐误伤。我这次就发现 81 条从没进过库的图文帖，其中 49 条其实是知识类内容。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="zUx0sAzyvrCPD5C15f1nta">这种情况<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="yiKhLoGBBisVfwEPrgUHir">不要</strong>走方式 B，直接复用主管线最省事：</p>
+
+<!-- 代码块：方式 C -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="hPIbVqfUawE8tnoYE7jAoi">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="e72OkhC8xPzW8FJo0zde5U">python scripts/backfill_misfiltered.py plan   # 只打印名单，不发请求
+python scripts/backfill_misfiltered.py run    # 执行，自动 OCR</section>
+</section>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="HxAC5vzsdFJiRnw3vLoVCG">方式 D：长文正文补全</h3>
+
+<!-- 代码块：方式 D -->
+<section style="background:#f7f7f7;border-left:3px solid #d9d9d9;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="AWO3wN2K2fpF61SyoIg1XH">
+<section style="font-family:Menlo,Consolas,monospace;font-size:13px;color:#5a5a5a;line-height:1.7;letter-spacing:0;white-space:pre-wrap;" data-page-node-id="bjYxgF25rnefYXQWOq5VUq">python scripts/fetch_article_full.py          # 走 detail 接口取全文
+python scripts/backfill_articles.py plan      # 预演
+python scripts/backfill_articles.py apply     # 回填 + 入库</section>
+</section>
+
+<!-- 小节 6 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="ukFYavmxhMjxaVovPVUGW3">六、关键设计：三个必须绕开的坑</h2>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="vulgggjy2dpxmbFy1A0bMv"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="eQtAOfYBSlF8wi2rVB5kol">一、OCR 结果不参与内容哈希。</strong>工具用 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="tSIRdjE9Hn4BXnmzcT53Ex">content_sha256</code> 判断条目有没有变过。如果把 OCR 结果算进哈希，换个模型、换个措辞重跑一次，就会被判定成「条目已变更」而报错。所以 OCR 和长文正文都在哈希算完之后才挂上去。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="HGPvAa0ElY2CAjdru6DKQn"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="4hpaZQFaR7FAiS7lr0uTYk">二、已入库的图文帖必须从本轮剔除。</strong>补丁上线前入库的图文帖，它的哈希是基于<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="BnRGih1suhWvKxrHHJQ8uE">背景音乐跑出来的噪声转录</strong>算的。上线后跳过语音识别，就再也复现不出那个哈希，保留只会报错。剔除掉，既不报错，也省下一次付费 OCR。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="GLxTT4qgiiC0FGCKVh3hFE"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="Fz913iU2xTooiEHQ4kkT0q">三、已入库笔记只能合并回填，不能重推。</strong>入库环节有一道「未跟踪笔记冲突」保护：笔记文件已存在、内容又和本次生成的不一致，就直接拒绝。所以删掉账本记录重新推是行不通的，必须用合并的方式把正文插进已有笔记。</p>
+
+<!-- 小节 7 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="4NULq0epHPBaGnUBzzMnVc">七、实测数据</h2>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="wElclDHWSKYSHqwA0xKdXG">图文帖 OCR</h3>
+
+<!-- 表格：OCR 验证 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="urqFdVOqb40m3onBcMy4jA">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="leRrjuLBGfFjxlZUD27X0Z">
+<tr data-page-node-id="EX0qiYNhlsQCOluA5FAHcS">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="PmBd1H3UQPvKrWXvc9vS18">验证项</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="rj55SbaZ9CINPrgEDGGGq4">结果</th>
+</tr>
+<tr data-page-node-id="kUUhzvcBaYdlXAHLd1aW2x">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="E6mxReJeBNKiNWBfQ3dLZ3">取样</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="4nhmuqQLmqi4qZxsuh3Awl">6 条 / 145 张图</td>
+</tr>
+<tr data-page-node-id="mo3w9MewDGgVFf0MvH2knx">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="KBLdTExcjNDztE05V2NDkq">识别出文字</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="e1HVnP858hFDsI2kgFqruy">135 张（其余为纯风景照，正常）</td>
+</tr>
+<tr data-page-node-id="TY4OYLgmYmtRNcjmAjvONx">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="JkhtWeg78CacfcwuEHreP8">产出字数</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="Puf9BXtbw0kLSDvzvbT4VS">30,386 字</td>
+</tr>
+<tr data-page-node-id="zgAYHEuqeCn6Yqm0H8Ms2t">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="M0389mORhOhRcg06YwfE5w">端到端耗时</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="0BxpX7JGUnRWIlERHqh2xj">6 分 57 秒（约 2.9 秒/张）</td>
+</tr>
+<tr data-page-node-id="dSxmuj4HllXOMnE6p1YWWb">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="cj920vASxNs6JnTWD5ECs3">分流正确率</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="fhHRLu9BjVLKOiUEWKwRJJ">6 条全部走图片通道，无误送</td>
+</tr>
+</table>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="eQ24irC7iyn4PKj9AcSr1s">最大的一条是 100 图的贴吧长帖，OCR 还原了 24,533 字，连楼中楼的评论都抽出来了。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="LSZOHxJfCckRpn6rx4w2qU">误筛回捞那批：49 条 / 252 张图，25 分钟跑完，提取 73,844 字。</p>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="YEDzt3LzX7OX8DKGBsEkuw">长文补全</h3>
+
+<!-- 表格：长文补全 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="Bbrf71MFRjNsouC3B10Afx">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="BW8aWrmuhcCjBrIAE2aLdJ">
+<tr data-page-node-id="oal9qs1pC5IZOqfbsCqLfW">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="plgwcQ01dQxyDGN65Hawem">验证项</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="aDLhuePZ1bsZUNqJrCv3e2">结果</th>
+</tr>
+<tr data-page-node-id="8P9oEtF7ktlR1H79BdhG1b">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="3YU93cIuxRDxgO14LLD5JX">长文总数</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="9piuL1qme6vlEMReuVfMsq">38 条</td>
+</tr>
+<tr data-page-node-id="nvHsA4sluwQ4YuCuG2rlFO">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="HPW4eqmEa2aVKU87uVnWqo">回填正文（已入库）</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="v27sreOkKFtnyYOxDUjCbJ">24 条</td>
+</tr>
+<tr data-page-node-id="FNEHqnk9wmz8VoPE4p8jLE">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="joEPoZVAQLufkDtOZKPEqf">新增入库</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="zO9qW4NFl3nUnHePM7CBsv">11 条</td>
+</tr>
+<tr data-page-node-id="3lyDftZZdDAGxXYrfBgpZF">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="zihpLr5sBliW7A9NlI213a">正文合计</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="i7bzjMMPWzFqViFXgZB9rU">136,850 字</td>
+</tr>
+</table>
+</section>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="r08Hofa6cFsSmvIA0KMYls">长文这条通道<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="IHjvrheAhxx1gxSFJRBmBF">零 API 成本</strong>，因为它取的是抖音自己的正文，不用调模型。</p>
+
+<h3 style="font-size:16px;font-weight:bold;color:#333;line-height:1.5;margin:22px 0 14px 0;" data-page-node-id="5JrKQFuNGFbXER27dOQUSj">模型选型</h3>
+
+<!-- 表格：模型选型 -->
+<section style="margin:0 0 16px 0;" data-page-node-id="RpHE7jiVyz5NoEdRdUHzzn">
+<table style="width:100%;border-collapse:collapse;font-size:14px;color:#3f3f3f;line-height:1.6;" data-page-node-id="f1QDMvGZugX9qaDcoa0DIo">
+<tr data-page-node-id="Dg7UXbgUuO518mPR7CGc9C">
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="TRkU0Wneq16i7ACzY91PRs">模型</th>
+<th style="border:1px solid #e5e5e5;background:#fafafa;padding:8px 10px;text-align:left;font-weight:bold;color:#333;" data-page-node-id="BFgVazEOAfVFm4ewXh8jnM">表现</th>
+</tr>
+<tr data-page-node-id="Hk4K3eMc7X22Olz5KuF4ND">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="vVGV8x4Jd1jCIS0WIG4a8f">PaddleOCR-VL-1.5</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="lEAA8iFEwgzYoKyrNClrLy">❌ 社交截图场景反复退化，输出一长串 0000 或 emoji 直到撞满上限</td>
+</tr>
+<tr data-page-node-id="S0BeO33mikyK4lUAMRwb35">
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="HjDVpnbnBanNj25oz8UMFU">Qwen3-VL-30B-A3B-Instruct</td>
+<td style="border:1px solid #e5e5e5;padding:8px 10px;" data-page-node-id="NaHdCg27HYf0UpGK7dFQEh">✅ 干净还原正文、楼中楼评论、表格结构</td>
+</tr>
+</table>
+</section>
+
+<!-- 金句块 -->
+<blockquote style="background:#f7f7f7;border-left:4px solid #c7000b;padding:12px 14px;margin:0 0 16px 0;" data-page-node-id="dEEU9ZyFFCcjeYa70aCJxW">
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0;" data-page-node-id="SJztdBOXQYV2F4byKwLihR"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="ultMzgFG1mCCsZeQSHGeH2">别迷信「专用 OCR 模型」</strong>，在社交截图这个场景上，通用视觉模型反而更稳。</p>
+</blockquote>
+
+<!-- 小节 8 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="UysCM0cz16uqXtTdV7Km7W">八、常见问题</h2>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="lB5XzxnmkgLe3dJxIsZzqx"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="XPdkSkyzhWQbXbTxsZUPzg">报 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="1LCIZmML9lPe9IwXv4tKIN">promoted item changed</code></strong>：已入库条目的哈希对不上。图文帖走剔除逻辑即可；其他情况说明笔记被手工改过而账本没同步，需要人工迁移。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="jFuXyVOVtSlJ8DDfbxHj8H"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="Gr4dz3A5CG8VLWtKZ7sEM1">报 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="nqy1zyQ1Yd9kMwZSkx4BAn">connect ECONNREFUSED 127.0.0.1:7890</code></strong>：环境里残留了没在运行的代理配置，<code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="NIcIyL3VUbypufjtpMEtIE">unset</code> 掉所有 proxy 变量再跑。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="dYuaIoaIOL2jSegJ3c7KDW"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="xReLU6YTUM9iaMn4ZLJnl4">图片下载失败 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="eG6IDzbqhB43yYUrlpAoEw">IncompleteRead</code></strong>：抖音 CDN 偶发断流，重跑该条即可，已缓存的图片会自动跳过。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="EFSUgx4HtDoFSVOWLJrpXv"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="s0wASN9ymPKybC36Sw5a0z">怎么判断一条是不是图文帖</strong>：看 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="6ZQNlZNqRYNaJMpEmyVgfl">play_url</code> 是不是指向 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="V4mt46EyB7arXlDXaIfPWZ">obj/ies-music</code> 并且以 <code style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;color:#c7000b;padding:1px 5px;border-radius:3px;" data-page-node-id="DrGqYmMJhci2cYmcUkq4Jo">.mp3</code> 结尾——是的话，几乎一定是图文帖。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="0k7pXtxaFcrFwGHDWZTWGF"><strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="KJ3VRut7y1CVqquUrdbkD4">入库前要不要脱敏</strong>：要。安全校验会拦截疑似密钥、特定标记符号等敏感串。技术类长文里可能有代码示例，入库前先扫一遍。</p>
+
+<!-- 分割线 -->
+<hr style="border:none;border-top:1px solid #e5e5e5;margin:28px 0;" data-page-node-id="6bJgdAPD5DEDTVH9U2G7fJ" />
+
+<!-- 小节 9 -->
+<h2 style="font-size:17px;font-weight:bold;color:#333;line-height:1.4;border-left:4px solid #c7000b;padding-left:10px;margin:28px 0 16px 0;" data-page-node-id="ZoykeuCHRbOjQ0BOW91P24">九、写在最后</h2>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="tYJfmi7siAn6sg7dq6oIZO">这套补丁本质上解决的是一个<strong style="font-weight:bold;color:#1a1a1a;" data-page-node-id="IERRkDMm1o9rWcHhXiy3sO">字段语义误判</strong>问题：工具以为所有收藏都有一条「视频地址 + 音轨」，但抖音的内容形态早就不是这样了。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="fHophgh69CvP3DBIq5Nx7Y">图文帖的正文在图片里，长文的正文在文章接口里，两者都不在音轨里。把这两条通道补上，932 条收藏才算真正被读进来。</p>
+
+<p style="font-size:16px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 16px 0;" data-page-node-id="kpUdZ06rj8ddQTvBLwGbHn">技能包和补丁已经开源，仓库地址见文末。如果你也在用类似的收藏自动整理流程，可以对照检查一下——你的知识库里，可能也躺着几十篇只有标题的空笔记。</p>
+</section>

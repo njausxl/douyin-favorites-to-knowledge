@@ -69,6 +69,55 @@ def _analysis(raw: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def _ocr_payload(raw: dict[str, Any]) -> dict[str, Any]:
+    """Normalize the optional OCR payload produced by the image-post reader.
+
+    Deliberately kept out of ``content_sha256`` so re-running OCR with another
+    model (or slightly different wording) never triggers a
+    "promoted item changed" error.
+    """
+    value = raw.get("ocr")
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError("item ocr must be an object")
+    text = value.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return {}
+    result: dict[str, Any] = {"text": text.replace("\r\n", "\n").replace("\r", "\n").strip()}
+    model = value.get("model")
+    if isinstance(model, str) and model.strip():
+        result["model"] = model.strip()
+    for key in ("image_count", "images_ok"):
+        count = value.get(key)
+        if isinstance(count, int) and not isinstance(count, bool) and count >= 0:
+            result[key] = count
+    return result
+
+
+def _article_payload(raw: dict[str, Any]) -> dict[str, Any]:
+    """Normalize the optional long-form article payload (Douyin aweme_type 163).
+
+    Kept out of ``content_sha256`` for the same reason as ``ocr``: re-fetching the
+    body, or a marginally different markdown serialization, must never trip the
+    "promoted item changed" guard.
+    """
+    value = raw.get("article")
+    if not isinstance(value, dict):
+        return {}
+    markdown = value.get("markdown")
+    if not isinstance(markdown, str) or not markdown.strip():
+        return {}
+    result: dict[str, Any] = {
+        "markdown": markdown.replace("\r\n", "\n").replace("\r", "\n").strip()
+    }
+    for key in ("title", "article_id"):
+        text = value.get(key)
+        if isinstance(text, str) and text.strip():
+            result[key] = text.strip()
+    return result
+
+
 def normalize_item(raw: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValueError("each source item must be an object")
@@ -103,6 +152,12 @@ def normalize_item(raw: dict[str, Any]) -> dict[str, Any]:
     if analysis:
         item["analysis"] = analysis
     item["content_sha256"] = sha256_bytes(canonical_json(item))
+    ocr = _ocr_payload(raw)
+    if ocr:
+        item["ocr"] = ocr
+    article = _article_payload(raw)
+    if article:
+        item["article"] = article
     item["note"] = render_note(item)
     return item
 
@@ -129,14 +184,46 @@ def render_note(item: dict[str, Any]) -> str:
     if analysis.get("content_summary"):
         lines.extend(["## 要点", "", analysis["content_summary"], ""])
 
-    if item["description"] or item["transcript"] or item["transcript_status"] != "not_requested":
+    ocr = item.get("ocr") if isinstance(item.get("ocr"), dict) else {}
+    ocr_text = str(ocr.get("text") or "").strip()
+    article = item.get("article") if isinstance(item.get("article"), dict) else {}
+    article_text = str(article.get("markdown") or "").strip()
+    if (
+        item["description"]
+        or item["transcript"]
+        or item["transcript_status"] != "not_requested"
+        or ocr_text
+        or article_text
+    ):
         lines.extend(["## 原始材料", ""])
         if item["description"]:
             lines.extend(["### 原始描述", "", item["description"], ""])
         if item["transcript"]:
             lines.extend(["### 转录", "", item["transcript"], ""])
-        elif item["transcript_status"] != "not_requested":
+        elif not ocr_text and not article_text and item["transcript_status"] != "not_requested":
             lines.extend(["### 转录", "", "未获得语音转录；上方原始描述不是逐字稿。", ""])
+    if ocr_text:
+        lines.extend(["## 图片文字 (OCR)", ""])
+        meta: list[str] = []
+        if isinstance(ocr.get("image_count"), int):
+            meta.append(f"共 {ocr['image_count']} 张图")
+        if isinstance(ocr.get("images_ok"), int):
+            meta.append(f"识别成功 {ocr['images_ok']} 张")
+        if ocr.get("model"):
+            meta.append(str(ocr["model"]))
+        if meta:
+            lines.extend(["> " + " · ".join(meta), ""])
+        lines.extend([ocr_text, ""])
+    if article_text:
+        lines.extend(["## 文章正文", ""])
+        article_meta: list[str] = []
+        if article.get("title"):
+            article_meta.append(str(article["title"]))
+        if article.get("article_id"):
+            article_meta.append(f"文章 {article['article_id']}")
+        if article_meta:
+            lines.extend(["> " + " · ".join(article_meta), ""])
+        lines.extend([article_text, ""])
 
     analysis_sections = (
         ("value_judgment", "价值判断"),
@@ -259,7 +346,7 @@ def validate_review(review: dict[str, Any]) -> list[dict[str, Any]]:
             "content_sha256",
             "note",
         }
-        optional = {"analysis"}
+        optional = {"analysis", "ocr", "article"}
         if set(item) - optional != required or not set(item) <= required | optional:
             raise ValueError(f"review item {index} fields do not match schema")
         aweme_id = item["aweme_id"]
@@ -272,6 +359,12 @@ def validate_review(review: dict[str, Any]) -> list[dict[str, Any]]:
             if normalized_analysis != item["analysis"]:
                 raise ValueError(f"invalid analysis fields for {aweme_id}")
             base["analysis"] = item["analysis"]
+        if "ocr" in item:
+            if _ocr_payload({"ocr": item["ocr"]}) != item["ocr"]:
+                raise ValueError(f"invalid ocr fields for {aweme_id}")
+        if "article" in item:
+            if _article_payload({"article": item["article"]}) != item["article"]:
+                raise ValueError(f"invalid article fields for {aweme_id}")
         expected_hash = sha256_bytes(canonical_json(base))
         if item["content_sha256"] != expected_hash:
             raise ValueError(f"content hash mismatch for {aweme_id}")
@@ -404,7 +497,8 @@ def promote(
             for item in pending:
                 staged = staging / f"{item['source']}-{item['aweme_id']}.md"
                 staged.write_text(item["note"], encoding="utf-8")
-                with staged.open("rb") as handle:
+                with staged.open("ab") as handle:
+                    handle.flush()
                     os.fsync(handle.fileno())
             for item in pending:
                 os.replace(

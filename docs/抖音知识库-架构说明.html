@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="h5RyAhlvZEENhQP3UoiuuR">
+<head data-page-node-id="4F2JrIV73MA8WhnO1EmWm0">
+<meta charset="UTF-8" data-page-node-id="mCMAlWZ7MBZCtHhpUX3cF4">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="9XM8YzpnvbbgGXyH4z8ZL5">
+<title>抖音收藏 → Obsidian 知识库 · 运行架构说明</title>
+<style>
+  :root{
+    --ink:#2C2C2A; --ink2:#5F5E5A; --ink3:#888780;
+    --line:#D3D1C7; --bg:#FAFAF7; --card:#FFFFFF; --soft:#F1EFE8;
+    --teal:#0F6E56; --teal-bg:#E1F5EE; --amber:#854F0B; --amber-bg:#FAEEDA;
+    --green:#3B6D11; --green-bg:#EAF3DE;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:48px 24px 80px;
+    background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.75;
+  }
+  .wrap{max-width:860px;margin:0 auto}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:40px}
+  h1{font-size:26px;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+  .sub{color:var(--ink2);font-size:14px}
+  .pill{display:inline-block;background:var(--soft);border:1px solid var(--line);
+        border-radius:20px;padding:2px 12px;font-size:12px;color:var(--ink2);margin-right:8px}
+  h2{font-size:19px;font-weight:600;margin:52px 0 6px;letter-spacing:-.01em}
+  h2 .num{color:var(--ink3);font-weight:400;margin-right:8px}
+  h3{font-size:15px;font-weight:600;margin:30px 0 8px}
+  p{margin:12px 0}
+  .lead{color:var(--ink2)}
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;
+       padding:22px 22px 14px;margin:22px 0}
+  .fig svg{display:block;width:100%;height:auto;max-width:680px;margin:0 auto}
+  .cap{color:var(--ink3);font-size:12.5px;text-align:center;margin-top:12px;
+       border-top:1px dashed var(--line);padding-top:10px}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px;
+        background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--soft);font-weight:600;font-size:13px;color:var(--ink)}
+  tr:last-child td{border-bottom:none}
+  code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:12.5px;
+       background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+  pre{background:#2C2C2A;color:#F1EFE8;border-radius:10px;padding:16px 18px;
+      font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.7;overflow:auto}
+  pre code{background:none;border:none;padding:0;color:inherit}
+  ul{margin:12px 0;padding-left:22px}
+  li{margin:7px 0}
+  .callout{border-left:3px solid var(--teal);background:var(--teal-bg);
+           border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;font-size:14px}
+  .callout.warn{border-left-color:var(--amber);background:var(--amber-bg)}
+  .callout b{font-weight:600}
+  .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+  .kv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kv .k{font-size:12px;color:var(--ink3)}
+  .kv .v{font-size:20px;font-weight:600;margin-top:2px;letter-spacing:-.02em}
+  .kv .n{font-size:12px;color:var(--ink2);margin-top:2px}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);
+         color:var(--ink3);font-size:12.5px}
+  @media print{
+    body{background:#fff;padding:0}
+    .fig{break-inside:avoid} h2{break-after:avoid}
+  }
+</style>
+</head>
+<body data-page-node-id="aikfN3E81v36Cg6yibpPax">
+<div class="wrap" data-page-node-id="P8sbgYopulQtHhDSKwoBQt">
+
+<header data-page-node-id="m2ocA33oAQJJN7KsALXfHK">
+  <h1 data-page-node-id="ojL56mOU0H0upTmTfDQg9k">抖音收藏 → Obsidian 知识库 · 运行架构说明</h1>
+  <div class="sub" data-page-node-id="4mfbaBB7C6km54qsYBlYNf">
+    <span class="pill" data-page-node-id="IcupBN8c65ZbI13P019m4O">douyin-favorites-to-knowledge v2.3.0</span>
+    <span class="pill" data-page-node-id="D2SmCNH14ek6ubEelGIJWV">含图文帖 OCR 增强</span>
+    <span class="pill" data-page-node-id="FCOMVYEg30N3ovSTFgL1u4">2026-09-10</span>
+  </div>
+</header>
+
+<p class="lead" data-page-node-id="RrcFjtUWchAcKBeackvAB3">这套系统做的事只有一句：<b data-page-node-id="e3ecoaxYcdfEiEpIsf407T">把抖音收藏夹里的内容，变成 Obsidian 里可检索的 Markdown 笔记</b>。它一次处理一条收藏，按内容形态选择「读图」或「听声音」，最后同时写进防重账本和知识库。</p>
+
+<div class="kvs" data-page-node-id="Pd39x0auM8xRhE7D1TgcMh">
+  <div class="kv" data-page-node-id="wpTgeypYga0ucxk1lFutyN"><div class="k" data-page-node-id="45Sm90RCVDF4BMgKK1AZ5V">收藏总数</div><div class="v" data-page-node-id="vwmxNCpiDAJIyt20vxyayw">932</div><div class="n" data-page-node-id="0e8mseDS6Zm1QNGAHFEoAN">含视频帖与图文帖</div></div>
+  <div class="kv" data-page-node-id="BDdhRsx4nJnpEJqJ0sbyXX"><div class="k" data-page-node-id="ieWiDPIV0TESjeOd7hyoH4">已入库笔记</div><div class="v" data-page-node-id="YRTasA8cZTRpuT0KZlajzU">307</div><div class="n" data-page-node-id="8rMNXihjU1zen2tamyBDhg">collection-*.md</div></div>
+  <div class="kv" data-page-node-id="uvRocvj0N4TRCg5PGvPuWh"><div class="k" data-page-node-id="FBZiNtm5TAmL9nwGOVuhTX">其中图文帖</div><div class="v" data-page-node-id="y0gDixOfL4s6FJ1emVI5cK">73</div><div class="n" data-page-node-id="doOMDNBjIcnmT9d85GBD4v">已全部补上图片文字</div></div>
+  <div class="kv" data-page-node-id="HMbE848XzJm0JwBA0Bwy9S"><div class="k" data-page-node-id="uhoTgSYq3e6D1oLrVPy5d0">提取总字数</div><div class="v" data-page-node-id="kqE0sAyYCRODd366YCp6WR">12.3 万</div><div class="n" data-page-node-id="b6RKo8a9FYBiIeW0QiGTb5">仅 OCR 一路</div></div>
+</div>
+
+<h2 data-page-node-id="UKdfdmQE8OCswHPcDWLa9b"><span class="num" data-page-node-id="DciEA5XUHcIwb6zQlYIsiT">01</span>分层运行架构</h2>
+<p data-page-node-id="2mZkQU7C14MVfLNQHDremB">数据自上而下流经五层，全程在一台机器上完成，没有服务端。每一层只做一件事，层与层之间靠 JSON 结构传递。</p>
+
+<div class="fig" data-page-node-id="ZjPfrjGK88ArmLb9fRlaAq">
+<svg viewBox="0 0 680 634" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" data-page-node-id="9bYoNqVJRBw03uzYwcxidP">
+<title>抖音收藏知识库工具的分层运行架构</title>
+<desc data-page-node-id="yroyIKGZM9KjfLeLzSDy29">自上而下五层：命令层、采集层、富化层、组装层、存储层；富化层按条目是否含图片分流为视觉 OCR 与语音识别两条支路。</desc>
+<defs data-page-node-id="4BJwHlgwtD4985IMdFdrHe">
+<marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" data-page-node-id="tFGv6b1wRZJsN533FAX5Jy">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="ELVUC6vLysh6AUdTWMA2Qq"/>
+</marker>
+</defs>
+<rect x="40" y="40" width="600" height="88" rx="12" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="JDzUCcxDo72Jj5Dk8A7zeP"/>
+<text x="60" y="66" font-size="14" font-weight="500" fill="#2C2C2A" font-family="system-ui,sans-serif" data-page-node-id="bM6QfUHJ9wrcLPcGKJJSN4">命令层 · cli.py</text>
+<text x="620" y="66" font-size="12" fill="#5F5E5A" text-anchor="end" font-family="system-ui,sans-serif" data-page-node-id="cMGsaTnE8ZECiKy9QtxPDQ">统一入口</text>
+<rect x="56" y="84" width="104" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="tiMBGsOG1nXq3ZFFFNMLFz"/>
+<text x="108" y="100" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="2Go26R0ggFWLzgzUtjtjaP">sync</text>
+<rect x="171" y="84" width="104" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="acDMHAMvr0yM9qrywommAg"/>
+<text x="223" y="100" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="aFovftSQF1MUsusZoz0RDL">daily</text>
+<rect x="286" y="84" width="104" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="CVJzTOgjwLvklhw4dz8UU0"/>
+<text x="338" y="100" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="DNNeeUFJcKXPjaCoFy8xTL">scan</text>
+<rect x="401" y="84" width="104" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="qbdWVbTre8yQIcFXoOUUmV"/>
+<text x="453" y="100" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="dz4yqTrlAsWkEIQqsVpsHJ">review</text>
+<rect x="516" y="84" width="104" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="AxBtmg42s8w3fUKCni288H"/>
+<text x="568" y="100" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="bv7weDBfX1hlezo0DHACLD">promote</text>
+<line x1="340" y1="130" x2="340" y2="150" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow1)" data-page-node-id="wHCpvbwptbDrXA4wFL8p5E"/>
+<text x="352" y="145" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="zoMwuHbxFpO5BpnwSg6DIy">收藏元数据</text>
+<rect x="40" y="154" width="600" height="82" rx="12" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="vLNRT6wxffOYvuYeLJp4c1"/>
+<text x="60" y="182" font-size="14" font-weight="500" fill="#2C2C2A" font-family="system-ui,sans-serif" data-page-node-id="oWk8PEmZfXLXt17pW5cseY">采集层 · browser_collector.py</text>
+<text x="60" y="206" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="dsfsBoTuZB6izAC36rFXxe">Playwright 驱动本机浏览器，直连抖音收藏夹接口</text>
+<text x="60" y="224" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="P7mlJe0S4Bcp6JxBoD4BN9">取 aweme_id / desc / author / play_url / duration / images</text>
+<line x1="340" y1="238" x2="340" y2="258" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow1)" data-page-node-id="liRGYgG3pZYQibPkA1yyIr"/>
+<text x="352" y="253" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="2wmlRM88rfxwWYwIJsn5wd">条目 + images</text>
+<rect x="40" y="262" width="600" height="130" rx="12" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="rB3djcRGBLKfnHooZNm01S"/>
+<text x="60" y="288" font-size="14" font-weight="500" fill="#2C2C2A" font-family="system-ui,sans-serif" data-page-node-id="046G1zxknPmTqgUeFAEbGp">富化层 · siliconflow.py</text>
+<text x="620" y="288" font-size="12" fill="#5F5E5A" text-anchor="end" font-family="system-ui,sans-serif" data-page-node-id="YmfMr8YB1KZXLPmxkMv26c">按 item.images 分流</text>
+<rect x="56" y="302" width="266" height="76" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5" data-page-node-id="tR7QfCSPuxf0X24cH4D7Vu"/>
+<text x="189" y="328" font-size="13" font-weight="500" fill="#04342C" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="tHRo8E7277oHWn4Hhw9ui1">图片通道</text>
+<text x="189" y="350" font-size="12" fill="#0F6E56" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="cEwPVq2IJOU4USFhyPh4C2">SiliconFlow · Qwen3-VL</text>
+<text x="189" y="368" font-size="12" fill="#0F6E56" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="SGcRLKrnGTlV0k2hS5AjMO">逐图识别屏幕文字</text>
+<rect x="358" y="302" width="266" height="76" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="zOaccNJ4AT7Ihxf0WLprB1"/>
+<text x="491" y="328" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="X3gIrCeCs8E9D29afWh1GR">视频通道</text>
+<text x="491" y="350" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="F1efoSxGuKRfKF81DcgskE">ffmpeg 抽音轨（-vn）</text>
+<text x="491" y="368" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="QP28CriWhpAfEmBwHx1SNa">SiliconFlow · SenseVoice</text>
+<line x1="340" y1="394" x2="340" y2="414" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow1)" data-page-node-id="1B8wmDGU2dGQHHFhg7YXcc"/>
+<text x="352" y="409" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="lZQJxcyA8GZHGh0keNhHFf">transcript / ocr</text>
+<rect x="40" y="418" width="600" height="82" rx="12" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="2Bvq9FY7lrqIaCemEoMYGJ"/>
+<text x="60" y="446" font-size="14" font-weight="500" fill="#2C2C2A" font-family="system-ui,sans-serif" data-page-node-id="7KOjHcJfjweYkUhbag6i7X">组装层 · workflow.py</text>
+<text x="60" y="470" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="lfbvnejVxUjca9hwZvdbIp">normalize_item（挂载 ocr）→ content_sha256 → render_note</text>
+<text x="60" y="488" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="iQPWQ0Wr3D7gyQDOwnZMNP">ocr 不参与 hash，换模型重跑不会撞「已变更」</text>
+<line x1="340" y1="502" x2="340" y2="522" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow1)" data-page-node-id="Y4O21qg4at8gKuFljXi1aE"/>
+<text x="352" y="517" font-size="12" fill="#5F5E5A" font-family="system-ui,sans-serif" data-page-node-id="M8feCBNDqW8W0mxhS8ZSVz">已批准笔记</text>
+<rect x="40" y="526" width="600" height="88" rx="12" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="saBwLdtuVLa0X1yEhj0HFG"/>
+<text x="60" y="552" font-size="14" font-weight="500" fill="#2C2C2A" font-family="system-ui,sans-serif" data-page-node-id="SGymV3zsOxkNeosFyJQDHk">存储层</text>
+<rect x="56" y="570" width="270" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="JpVJKuYptCgbyOR1ZdBOlC"/>
+<text x="191" y="586" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="LGtQwSZId2pEgQmY4JXgFg">ledger.sqlite3 · 防重账本</text>
+<rect x="346" y="570" width="274" height="32" rx="6" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="GqRXkbgIYb6tQImF7JTXNH"/>
+<text x="483" y="586" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="slXE04KPUha9uAlr3sRPxC">Obsidian · collection-*.md</text>
+</svg>
+<div class="cap" data-page-node-id="cK6KEYzO6NIlToSRqTFQs0">图 1 · 五层直线结构，<code data-page-node-id="bqTaye7mDGhPGsl2lWCMdm">sync</code> 一条命令从顶跑到底，中途不落盘</div>
+</div>
+
+<h3 data-page-node-id="MmtgXRK1WkniCQuojkx4xq">各层职责</h3>
+<table data-page-node-id="RigXrSSpWRKoKRxNpq2j0y">
+  <tr data-page-node-id="vK6y43N085nzTQo43hKBAY"><th style="width:130px" data-page-node-id="6Gto2V1FeUhFFiNm9SlT4r">层</th><th style="width:200px" data-page-node-id="Eq0BECi6iVbx4TwStLAeZn">实现文件</th><th data-page-node-id="GX8hA4kmDk3WUcmvBS0aae">做什么</th></tr>
+  <tr data-page-node-id="n5RBClvw0YhMwoWhg6MnXB"><td data-page-node-id="oHN3nG4U26fEqRVUF0J0Xe"><b data-page-node-id="O7ldWz4sPurps7mJwD1dtD">命令层</b></td><td data-page-node-id="wGWUa89HK5SYAwVeFE3g30"><code data-page-node-id="6gGmmnKwD4bdQvhFWgfuVw">cli.py</code></td><td data-page-node-id="ElMEqUnhQsxDbzWmFBnd6U">7 个动作的统一入口。配置类 3 个（setup / login / configure-obsidian），数据类 5 个（sync / daily / scan / review / promote）</td></tr>
+  <tr data-page-node-id="e1zfektiQ0HQLEGhlPgGCK"><td data-page-node-id="8G52ZZyaH9hp5wwRSzltAi"><b data-page-node-id="8GDz7VC1jHeJfrKzD9RIzy">采集层</b></td><td data-page-node-id="5Lezxe7CgwkNiXn63pEhqv"><code data-page-node-id="suDZrFcE3PWe9uU9DyeDgk">browser_collector.py</code></td><td data-page-node-id="sFiZJlxUFAEs61yr6p14jO">Playwright 起真浏览器读收藏夹接口，取标题、描述、作者、视频流地址、图片列表</td></tr>
+  <tr data-page-node-id="W4KWzt4rrsULgmCux6uuUJ"><td data-page-node-id="8s83QhYl4hWqAyB57rHFJe"><b data-page-node-id="riUOy20Tz0vE0lrDtFW56c">富化层</b></td><td data-page-node-id="Di3e0Jq0tGcuLQmCm19EEA"><code data-page-node-id="4NK3DcoE8tZhIm4ESKkdHk">siliconflow.py</code></td><td data-page-node-id="bZfVb3AKfqq9SVE5ve9XdK">按内容形态分流：有图走视觉 OCR，无图走语音识别</td></tr>
+  <tr data-page-node-id="McxxTEHjkgHT9wZrGEqJIQ"><td data-page-node-id="m73CLY5ohpYmQEsHGpXYKq"><b data-page-node-id="0WhXqA1E8PbziDVWDRQzmz">组装层</b></td><td data-page-node-id="uVBnn9BDR8kGHgoo9ZgHZT"><code data-page-node-id="9g2oJt2Cc7tDCYiefosCq5">workflow.py</code></td><td data-page-node-id="AUvfGNIBI0ja1YpPxb81fn">规范化字段 → 计算防重哈希 → 渲染成 Markdown</td></tr>
+  <tr data-page-node-id="v5DzegeZwzNMI7hbrEnsxr"><td data-page-node-id="EHI1fUEO3HVjN1uXe3igX1"><b data-page-node-id="yHiRIKwwk8yG4knaBV3CVS">存储层</b></td><td data-page-node-id="QTZZjn8O7rD66HDsYZqY69">—</td><td data-page-node-id="RUJ82zyiTQ6Klt7cwbwJhU">账本管去重，Markdown 管阅读，双写</td></tr>
+</table>
+
+<div class="callout" data-page-node-id="9BSqKlyu7chLjUwhjRKbti">
+<b data-page-node-id="28cVVzcDLEUsrbS56cts6b">为什么采集要用浏览器而不是 API？</b> 抖音收藏夹接口需要登录态且带签名，直接在服务端请求会被拦。用 Playwright 起一个真实浏览器复用你已登录的会话，是唯一稳定的路子——代价是首次要扫码登录。
+</div>
+
+<h2 data-page-node-id="OnBAysQS8AfGqPDFYErj5S"><span class="num" data-page-node-id="IOJ9f6BqOsEIcGwyhDkvIa">02</span>单条收藏的分流决策</h2>
+<p data-page-node-id="6yEhqFL9XAFk60kedoP5Ya">把富化层那一个菱形展开，就是单条收藏从进入系统到落盘的完整路径。</p>
+
+<div class="fig" data-page-node-id="HJgVDdXm7nwARmb5v9350l">
+<svg viewBox="0 0 680 522" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" data-page-node-id="rjppFU9XAXkmC53VlyARSG">
+<title>单条收藏在管线中的处理路径</title>
+<desc data-page-node-id="k4Yvn3wkoFrgk7vz7yC9A2">一条收藏先经采集，再按 item.images 是否非空分流为视觉 OCR 或语音识别，最后合并渲染并写入账本与知识库。</desc>
+<defs data-page-node-id="sIRqtvLnc5YlaJ7d7K4JPX">
+<marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" data-page-node-id="p1REOcTQYvBJBTJQdgeyhJ">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="HwUlv7jilIXqwAFMYuGDVO"/>
+</marker>
+</defs>
+<rect x="230" y="40" width="220" height="44" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="SmJ6hgpfxhAa3y94xiDPUP"/>
+<text x="340" y="62" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="Kz9UOaKDSGnEhaoyIff3eX">一条抖音收藏</text>
+<line x1="340" y1="86" x2="340" y2="100" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)" data-page-node-id="IVBI8IX0MmPRhtBkG1mKNU"/>
+<polygon points="340,104 450,150 340,196 230,150" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="MBUV6GOkQnunj2DGNTLS5X"/>
+<text x="340" y="144" font-size="12" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="MMkPqmbYGJRErWUtbAtjBG">item.images</text>
+<text x="340" y="164" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="GumONPQ7pwLAayAAhtEvRx">是否非空</text>
+<polyline points="230,150 170,150 170,226" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)" data-page-node-id="H7pfApKoshDrXaPmDr0Jji"/>
+<polyline points="450,150 510,150 510,226" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)" data-page-node-id="CdpwhnjVZrcsXxu8SYjkbn"/>
+<text x="150" y="134" font-size="12" fill="#0F6E56" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="cU36y4A2zYlBRLbpAVbMEg">是</text>
+<text x="530" y="134" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="85LqPwVvBuXgiSRXR1hn4X">否</text>
+<rect x="40" y="232" width="260" height="76" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5" data-page-node-id="vwvhwaPXk21wIPAx555qDp"/>
+<text x="170" y="258" font-size="13" font-weight="500" fill="#04342C" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="tDDCgJxprjzUIzHlsHnREA">图片通道</text>
+<text x="170" y="280" font-size="12" fill="#0F6E56" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="G7JyHxvsabGanUAcs7EoqJ">下载 N 张图</text>
+<text x="170" y="298" font-size="12" fill="#0F6E56" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="5j2bhAqiNzsYofdndT63dc">Qwen3-VL 逐图 OCR</text>
+<rect x="380" y="232" width="260" height="76" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="dgCzWniMtKTXb6yoQyioYE"/>
+<text x="510" y="258" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="jGa3V69GE4JbTfNATLjhTR">视频通道</text>
+<text x="510" y="280" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="iqRFnDZTPO3HmoBZzXP33m">下载视频流</text>
+<text x="510" y="298" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="h916a1fgzB3oiyATfSKnbu">抽音轨 → SenseVoice</text>
+<polyline points="170,308 170,344 340,344" fill="none" stroke="#888780" stroke-width="1.5" data-page-node-id="3AiAVReEyIgYREp3nUKu9H"/>
+<polyline points="510,308 510,344 340,344" fill="none" stroke="#888780" stroke-width="1.5" data-page-node-id="v1x17AxDrF6CB3RNni06Yb"/>
+<line x1="340" y1="344" x2="340" y2="358" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)" data-page-node-id="JQEA1owGeBHauR9zyg3Nby"/>
+<rect x="150" y="362" width="380" height="64" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="um59CfW4XDYtUaGZmlCjQp"/>
+<text x="340" y="386" font-size="13" font-weight="500" fill="#2C2C2A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="NhBcODhTIhoWC7ZCN9NGvf">渲染笔记</text>
+<text x="340" y="408" font-size="12" fill="#5F5E5A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="sou3EwhFF2zUWxdxrkIXRu">原始描述 ＋ 转录 ／ ## 图片文字 (OCR)</text>
+<line x1="340" y1="428" x2="340" y2="450" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)" data-page-node-id="Yy1QIs6NVWAVUp9HdXI0WJ"/>
+<rect x="150" y="454" width="380" height="48" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="R8EM99Z0RTFnoCzf0J8pRz"/>
+<text x="340" y="478" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="GiEmBTnfHomfHmYpnLUg3T">ledger.sqlite3 ＋ Obsidian 笔记</text>
+</svg>
+<div class="cap" data-page-node-id="hBTTUQ0TMFf9P9iyNnlcXk">图 2 · 判定条件只有一条：<code data-page-node-id="x1xK44zB6NVoUB2BHxip2D">item.images</code> 是否非空</div>
+</div>
+
+<div class="callout warn" data-page-node-id="0r7PZuwAWbJiQICxPB8YDj">
+<b data-page-node-id="T8wl4n0deWgbnRxF0eYFVJ">为什么必须分流？</b> 抖音给图文帖也填了 <code data-page-node-id="15PKOWZmBqYr5UAe4pgM2L">play_url</code>，但那个地址指向的是<b data-page-node-id="L2ByyvnC8Q8jfuqN8E7WP8">背景音乐 MP3，不是视频流</b>。如果不分流，这条会被当成普通视频送进语音识别，结果是把 BGM「听」成一段幻觉文本，状态却标成成功。你库里曾经出现的 <code data-page-node-id="LBsVCmCV8GuRkPHMwBhwox">🎼嗯。。🎼的都荡。The number you dialed is not available...</code> 就是这么来的。<br data-page-node-id="EfnpGU5vLhTpdoGBnqPPUY">
+分流的真正意义是<b data-page-node-id="keMxQyyuASTw6WKuyjnP0h">把劣质信号拦在门外</b>——宁可走读图，也不让背景音乐污染笔记。
+</div>
+
+<p data-page-node-id="5zYqjsH5mDT5jSLzProP8F">另外还有个兜底规则：<code data-page-node-id="H1Yf6XyH7yQdsCbAl7x7TY">sync</code> 落盘前会再筛一道，<code data-page-node-id="9pGhSGkJ1sv9bQJUmZzxC8">failed / unavailable / too_large / budget_exceeded</code> 这四种状态的条目会被从本轮剔除，避免每次同步都无谓重试同一批失败项。</p>
+
+<h2 data-page-node-id="6PiwB1y7GTqf7oEKJS7Goz"><span class="num" data-page-node-id="vL9OLtZRsAuULTaS9OzinP">03</span>两条通道的分工</h2>
+<p data-page-node-id="UZNgDIyPKE2eNNJDNCfsLN">项目目录里其实躺着两套东西，它们不是重复，而是分工：一套负责日常增量，一套负责历史存量攻坚。</p>
+
+<div class="fig" data-page-node-id="xbkELlP2ixWxDjOg63hwsQ">
+<svg viewBox="0 0 680 490" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" data-page-node-id="0ySAHbTWb0EGkTmAH4Pxk1">
+<title>日常增量管线与存量攻坚旁路的对比</title>
+<desc data-page-node-id="FAsOrDGyH4IhQCqOAvBueX">左列是每次同步自动运行的增量管线，右列是一次性脚本组成的存量攻坚旁路，两者最终写入同一套账本与知识库。</desc>
+<defs data-page-node-id="qjQoHtIBK6izIQbhgqIAd4">
+<marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse" data-page-node-id="3PtSidm2pe0aWeyBiRRLIB">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="nP2gXWzbAf6rHrwuKK9W5E"/>
+</marker>
+</defs>
+<text x="40" y="52" font-size="13" font-weight="500" fill="#27500A" font-family="system-ui,sans-serif" data-page-node-id="kKOO7I55idSPLt4dXE0FZ8">① 日常增量 · sync / daily</text>
+<text x="380" y="52" font-size="13" font-weight="500" fill="#854F0B" font-family="system-ui,sans-serif" data-page-node-id="WPwO61JZd7D6GtlWDGzX4i">② 存量攻坚 · 一次性脚本</text>
+<rect x="40" y="68" width="260" height="62" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5" data-page-node-id="LhzGo9yZefVQvmxEz69kPP"/>
+<text x="170" y="93" font-size="13" font-weight="500" fill="#173404" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="ysVo44j0URNY5BpZFkMI6Y">采集新增收藏</text>
+<text x="170" y="113" font-size="12" fill="#27500A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="Lu71eVjq4b6F3jUTu8wr94">浏览器直读收藏夹接口</text>
+<rect x="380" y="68" width="260" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="wc9ftKBT3CnkoAJsuIF99h"/>
+<text x="510" y="93" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="a7FrmsSYsoRXqKsbUQqKRa">全量采集元数据</text>
+<text x="510" y="113" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="9ofQxUg5uooJGC8itD1JUw">932 条落 JSON 快照</text>
+<line x1="170" y1="132" x2="170" y2="150" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="Q3aJjLdLfmMDPvvBQgR3WV"/>
+<line x1="510" y1="132" x2="510" y2="150" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="3rBAaNVWbuN1dhVAsgg4yU"/>
+<rect x="40" y="152" width="260" height="62" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5" data-page-node-id="WoVIySnYVZbAbLQeZNEAa2"/>
+<text x="170" y="177" font-size="13" font-weight="500" fill="#173404" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="GtaX20FpUTLsyUotF1yQLp">分流富化</text>
+<text x="170" y="197" font-size="12" fill="#27500A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="G7IPWcqCf9sbFkhloXyfe9">有图走 OCR，无图走 ASR</text>
+<rect x="380" y="152" width="260" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="uwLz2G5TIKXuudioxCVY6i"/>
+<text x="510" y="177" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="uidcSmSRKPaqkmSXL4BTDB">人工筛选</text>
+<text x="510" y="197" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="HUZYTp4ehSDzbz4vXdazmK">留下 303 条 selected_idx</text>
+<line x1="170" y1="216" x2="170" y2="234" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="vty0KBHDO8ONWguxCiZFRw"/>
+<line x1="510" y1="216" x2="510" y2="234" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="Ud3Ze03FPpOp8XY2XtpbSy"/>
+<rect x="40" y="236" width="260" height="62" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5" data-page-node-id="OwzPQj6pLgmX0LimIxQVNX"/>
+<text x="170" y="261" font-size="13" font-weight="500" fill="#173404" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="RvcaBiHzlC98iRQQWg5dAP">审核并批准</text>
+<text x="170" y="281" font-size="12" fill="#27500A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="ozHleDHKV0sDeOA9USfAs7">build_review 到 promote</text>
+<rect x="380" y="236" width="260" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="WpAoqKLAgSmyZhMDdeEDoD"/>
+<text x="510" y="261" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="I1l2LPO6QtMbo7voQaPkpX">并行转录攻坚</text>
+<text x="510" y="281" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="Y3Hl93iaiShhn9weqaydm7">3 进程 ＋ sweep_big 切片</text>
+<line x1="170" y1="300" x2="170" y2="318" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="5UvBsC1gUI9Yj5U24xqsox"/>
+<line x1="510" y1="300" x2="510" y2="318" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="9P8qHNMRcpfJcobPDcx0YG"/>
+<rect x="40" y="320" width="260" height="62" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5" data-page-node-id="Rzj6gvJuKC0GAsm1xCl9uc"/>
+<text x="170" y="345" font-size="13" font-weight="500" fill="#173404" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="D37DhQofyrQ1BmDZkcm422">增量入库</text>
+<text x="170" y="365" font-size="12" fill="#27500A" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="5MSC4cRNfBLAhzAJOaqDUE">已入库条目自动跳过</text>
+<rect x="380" y="320" width="260" height="62" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5" data-page-node-id="PpdjTdlr14ieLfpVyzcnlg"/>
+<text x="510" y="345" font-size="13" font-weight="500" fill="#412402" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="quyhzGZbOlSKl2KYmPvvE8">图文帖补 OCR</text>
+<text x="510" y="365" font-size="12" fill="#854F0B" text-anchor="middle" font-family="system-ui,sans-serif" data-page-node-id="RFbWxAaQExeCuktxCt68Xu">73 条 ／ 227 张图</text>
+<line x1="170" y1="384" x2="170" y2="410" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="gTDxiEafvxjjFFu6EGy44H"/>
+<line x1="510" y1="384" x2="510" y2="410" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)" data-page-node-id="dTC1ICQOSWFzDTS4R6Q8ec"/>
+<rect x="40" y="414" width="600" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" data-page-node-id="IcocDdYFtE9nIsZF3aaOgw"/>
+<text x="340" y="442" font-size="13" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" data-page-node-id="jE4WT8GnKEnf7s7SUZOq2e">共同产物：ledger.sqlite3 防重账本 ＋ Obsidian collection-*.md</text>
+</svg>
+<div class="cap" data-page-node-id="3GGDj4dFei5OgfMMbA01V1">图 3 · 两条通道写同一套账本与知识库，互不冲突</div>
+</div>
+
+<p data-page-node-id="cuHx9vNFb5BCQePHAq1QjS">历史存量有 932 条、还要人工筛选、还要对付超过 512MB 的超大视频，主管线串行跑不动，所以当时额外搭了一条旁路：多进程并行转录、45 分钟音频切片分段、以及图文帖的批量 OCR 补全。</p>
+
+<h2 data-page-node-id="ZebYDSqBwHPzFQ421p2H6Q"><span class="num" data-page-node-id="HC2iEDFUslBtxBQ8akFxyo">04</span>文件与数据分布</h2>
+
+<table data-page-node-id="zTU6gELd7UVC75Yb5jOhwe">
+  <tr data-page-node-id="Tx2xgFug7rWefpfTkpoJ6r"><th style="width:290px" data-page-node-id="tJrRE1f2MpVZQXC4uY0PZF">位置</th><th data-page-node-id="WsyHrmxXwHJMAn0u5qYs1r">角色</th></tr>
+  <tr data-page-node-id="YGn3iF4etlCP5SU9oiw2OJ"><td data-page-node-id="tnCnRNrzayRUH2ys9raiPi"><code data-page-node-id="X3DKOwnu5bQ68fYVP9Ni97">.venv/Lib/site-packages/douyin_favorites_knowledge/</code></td><td data-page-node-id="dRvVN2XGe3OTbLtJsunPCS"><b data-page-node-id="kjKTvZD1DDcH7KmCgFp6YB">实际运行</b>的代码（非 editable 安装）</td></tr>
+  <tr data-page-node-id="yd3AOhAZuBhbhAaSBhgihY"><td data-page-node-id="UTwsWqvsb1KhmH3AQ83liP"><code data-page-node-id="jp6H3NPGuyxkxJ40KDn3gX">src/douyin_favorites_knowledge/</code></td><td data-page-node-id="QmFjlftZV8GCkADKZycAQT">源码副本，与运行版保持一致，重装不丢改动</td></tr>
+  <tr data-page-node-id="dxLbB5QGtFZUKl0FejI7HV"><td data-page-node-id="2CBOxhbd0howJlQC3NLWgD"><code data-page-node-id="Uwc7noCEo8zn3HeslD3H2M">%APPDATA%\douyin-favorites-to-knowledge\</code></td><td data-page-node-id="5ELDW1UCkX5sLqiRj3gyxD"><code data-page-node-id="9ExkR0MgBh9wNO1WiJcCGh">config.json</code> + <code data-page-node-id="qhWnNJhpurEkM3FgLPoEJr">state/ledger.sqlite3</code></td></tr>
+  <tr data-page-node-id="F4LPSbAsEqwlHELgyFxU6Q"><td data-page-node-id="GDuxstHgE1elLe9YpVEiF6"><code data-page-node-id="wcLTkJ7WJiVXjuTfJZ9aFN">OneDrive\Apps\Obsidian library\抖音知识库\</code></td><td data-page-node-id="6ZnOz0g7qh3yalOSCrO9AF">产出：<code data-page-node-id="fjB9yBfsTcIDuFVSRAVm4W">collection-*.md</code> 笔记</td></tr>
+  <tr data-page-node-id="ZDpeGJlVB8AMV9wyBeheuW"><td data-page-node-id="nwgCNpphF9bGtGjn2SBBv3"><code data-page-node-id="cVYYpRdRo10usZPgPZQIrg">OneDrive\douyin\ocr_test\</code></td><td data-page-node-id="ZIfhVvHiKIYg45ifcGayAu">存量攻坚脚本、图片缓存、OCR 中间产物、知识库备份</td></tr>
+  <tr data-page-node-id="IVFzvZg85MKNjDzWFtOeEC"><td data-page-node-id="UwydUpfaYtF6saAMqRroTx"><code data-page-node-id="LCFb3VgUcegn3VpZsAy915">~\.workbuddy\skills\douyin-image-post-ocr\</code></td><td data-page-node-id="inptbX9CLNGGLkKABvYPF5">固化技能包：流程文档 + 脚本 + 离线回归测试</td></tr>
+</table>
+
+<h2 data-page-node-id="Vw3UO9i8HjeYseLtQuKEOY"><span class="num" data-page-node-id="IrVQCJ6kxjsJcKE0vXcs3C">05</span>四条设计约束</h2>
+<p data-page-node-id="EdwX7N2qWvF0DtO9BmIWSG">整个架构是围绕四个踩过的坑长出来的：</p>
+<ul data-page-node-id="fiUSn0oOsiGEqQptlP2sL9">
+  <li data-page-node-id="YsIRazPMQFpheL2FcFbays"><b data-page-node-id="Mu11SuRADiO2Vbs1KWN4Al">接口靠浏览器，不靠 API</b> —— 收藏夹接口需要登录态和签名，服务端直连会被拦，所以必须复用本机浏览器会话。</li>
+  <li data-page-node-id="6qPDq7tAXPBooNZ3xEUF3D"><b data-page-node-id="YKb3Q3pR0iFTrg2CS2WADA">图片和声音走两条独立通道</b> —— 因为图文帖的 <code data-page-node-id="RQPuBOG4vQrzFBQxENVeCI">play_url</code> 是背景音乐，混着走会产出幻觉文本。</li>
+  <li data-page-node-id="9SirZpYgfQN8eXt7CWdqIF"><b data-page-node-id="mW0I6bjxoUwRlhn147MIZ5"><code data-page-node-id="EiWWxNNlfuzBcxAeZp8vQL">ocr</code> 字段不参与防重哈希</b> —— 哈希在挂载 OCR 之前算好，换视觉模型重跑不会撞「条目已变更」报错。</li>
+  <li data-page-node-id="DUzLuPoT3q9tDF3chAzGxn"><b data-page-node-id="wcm4dvJxoMMT9Ui91WiHWq">账本管去重、Markdown 管阅读</b> —— 双写各司其职，账本让你下次同步时自动跳过已处理项。</li>
+</ul>
+
+<h2 data-page-node-id="cvIyv7YZzoBHxmIwfJJ3uJ"><span class="num" data-page-node-id="AR6YLF7nfl4Uie10MDT6B4">06</span>日常用法</h2>
+
+<pre data-page-node-id="M7EEoRetiKHCpOPBULNz0U"><code data-page-node-id="PKzRjaurWyvaF59fPTwuaA">cd "C:/Users/Administrator/OneDrive/douyin/douyin-favorites-to-knowledge"
+
+# 代理未开时必须先清，否则下载会秒败
+unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+
+# 同步新增收藏（静默写入知识库）
+.venv/Scripts/python.exe -m douyin_favorites_knowledge sync
+
+# 想先看再决定，换成 scan 生成待审清单
+.venv/Scripts/python.exe -m douyin_favorites_knowledge scan</code></pre>
+
+<p data-page-node-id="aYIIyIq0Eib1QsRLx0pWT8">跑 <code data-page-node-id="yrgh2Lyz2dBgxnI5GMwgrw">sync</code> 就是图 1 那条直线走一遍：新增收藏自动判定走读图还是听声，写完直接落库。</p>
+
+<h3 data-page-node-id="aAXYueMEkBHvDXrEIC7Kur">可调开关（环境变量）</h3>
+<table data-page-node-id="DaHnvFqSfSeGPiePnlg7wK">
+  <tr data-page-node-id="LBbwutvUZr0HFZbq09XrPa"><th style="width:250px" data-page-node-id="W2SL4WpvIx58u8mqotTLhF">变量</th><th style="width:130px" data-page-node-id="RsVYGADKZ50FYjrrz85OgW">默认</th><th data-page-node-id="ReCphDHCLuq15RXanrzAoR">作用</th></tr>
+  <tr data-page-node-id="QtzEZThZkBUX9B4s8NiRnZ"><td data-page-node-id="xVgcxTUjwdCS8h7sJnHbdK"><code data-page-node-id="tpc1mL6kjw0ERcvr40tT0w">DOUYIN_OCR_ENABLED</code></td><td data-page-node-id="G9m5XleCQRHc5S6c3u48Di"><code data-page-node-id="B7Z9fsYxzb83aGAW4jORoi">1</code></td><td data-page-node-id="6OlFlmGNH6dhXmzsaSZc0J">设 <code data-page-node-id="yxpxTexz3s253nZqvZwH3V">0</code> 关闭图片 OCR 通道</td></tr>
+  <tr data-page-node-id="8CYSWZnpYMtWLc9uCCdNDI"><td data-page-node-id="DKZ0rrp26Q2F18MgOF7OsL"><code data-page-node-id="xj6ULnOZ44BfFZlvIZk4JF">DOUYIN_OCR_MODEL</code></td><td data-page-node-id="Ch4d1Ge3EbJZNSD6KxbFzk"><code data-page-node-id="fzYOexuQUtyuDGiwHwTwiT">Qwen/Qwen3-VL-30B-A3B-Instruct</code></td><td data-page-node-id="G6iPBSRUUTW5DuLYJ87u2d">视觉模型选择</td></tr>
+  <tr data-page-node-id="ZHr8aGteXc83BDYHQA7DZA"><td data-page-node-id="ro8qfCEQ4mShDqKNL6jQsx"><code data-page-node-id="BpbCV1TctsV8MJ6VhTg7iI">DOUYIN_OCR_MAX_IMAGES</code></td><td data-page-node-id="xCwgZEiczRtdwKnYz3BGof"><code data-page-node-id="ozrKqQltTHctP6yWYVSlZb">0</code>（不限）</td><td data-page-node-id="sI8iSfM3HG65YfF7GDvLR7">单条最多处理几张图</td></tr>
+  <tr data-page-node-id="uXov5z8XQDIs8vug5cGv8P"><td data-page-node-id="sVzlhBiGppCnxOjJVqGVeu"><code data-page-node-id="8USdIXwH2LhiWdFZJ9QBvQ">DOUYIN_OCR_CONCURRENCY</code></td><td data-page-node-id="gb2Rm2m9EeBRtAp47k4i1r"><code data-page-node-id="uuFCglCZPgc38s8IEnCdzF">4</code></td><td data-page-node-id="HRSrOFaAVmXD2IiQuzTsC9">单条内并发下载与识别数</td></tr>
+</table>
+
+<div class="callout" data-page-node-id="NthmBEN24zK6KrLp8diVbW">
+<b data-page-node-id="EwGWh4rTKO3NxIeswv8GGW">模型选型提示：</b> 不要用专用 OCR 模型处理社交截图。实测 <code data-page-node-id="5iu5QL9yUpciCTxWzm1k2W">PaddlePaddle/PaddleOCR-VL-1.5</code> 在抖音截图场景会<b data-page-node-id="qUFfAOeMiLo8gxIpOAgORh">重复退化</b>——吐出一长串 <code data-page-node-id="GhDCREGyiVTvnAKJscNCuq">0000</code> 或 emoji 直到撞满 token 上限。通用视觉模型 <code data-page-node-id="9F20lJktDvJEHv0kFLvDDS">Qwen3-VL-30B</code> 反而全部干净，连表格结构和楼中楼评论都能还原。
+</div>
+
+<footer data-page-node-id="YWT1id1nXjO9r63HBlC51K">
+  本文档由 WorkBuddy 于 2026-09-10 自动生成 · 对应的技能包：<code data-page-node-id="PsdrAFxxRuQsqBB1SVgfLk">douyin-image-post-ocr</code>
+</footer>
+
+</div>
+</body>
+</html>
