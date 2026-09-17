@@ -12,6 +12,18 @@
   （默认 1800）/ `DOUYIN_ASR_FFMPEG`（显式指定 ffmpeg）。切段成功的条目
   `transcript_source` 为 `siliconflow_sensevoice_segmented`，并带 `segments_total` / `segments_ok`。
 
+### Verified
+- 单批实测（3 小时 23 分，三条原本全部失败的超长视频）：
+
+  | 时长 | 原状态 | 现状态 | 分段 | 正文 |
+  | --- | --- | --- | --- | --- |
+  | 2.5 h | `failed` | `success` | 6/6 | 45,115 字 |
+  | 8.8 h | `too_large` | `success` | 18/18 | 172,570 字 |
+  | 9.7 h | `failed` | `success` | 20/20 | 187,211 字 |
+
+  合计回捞约 40.5 万字。验证脚本 `extras/douyin-image-post-ocr/scripts/verify_segment.py`
+  只拉前 3 分钟试切，1 分钟内即可验通全链路，无需等数小时。
+
 ### Fixed
 - `_ffmpeg_exe()`：ffmpeg 不在 `PATH` 上时回退到 `imageio-ffmpeg` 自带的完整静态构建
   （含 libmp3lame / http / https / `-reconnect`）。此前 `shutil.which("ffmpeg")` 返回空会让
