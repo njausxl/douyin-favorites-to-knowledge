@@ -1,0 +1,219 @@
+diff --git a/src/douyin_favorites_knowledge/siliconflow.py b/src/douyin_favorites_knowledge/siliconflow.py
+index f844e45..8ec5fdf 100644
+--- a/src/douyin_favorites_knowledge/siliconflow.py
++++ b/src/douyin_favorites_knowledge/siliconflow.py
+@@ -34,6 +34,25 @@ TEMP_PREFIX = "douyin-sf-asr-"
+ DEFAULT_BITRATE = "64k"
+ DEFAULT_SAMPLE_RATE = "16000"
+ 
++# --- Long-media segmentation ----------------------------------------------
++# Very long items fail for two different reasons, and one fix covers both:
++#   * a 2.5 h and a 9.7 h item returned ``failed`` after a *successful* download
++#     (the upload is simply too long for one SenseVoice request), while a 2 h
++#     item succeeded;
++#   * an 8.8 h item never downloaded at all — its video stream (~7 GB) exceeds
++#     any sane ``max_media_bytes``.
++# So for long media we stop downloading the video stream entirely and let
++# ffmpeg pull the signed URL, discard the video and cut the audio into parts:
++#   * an 8 h video costs ~250 MB of temp audio instead of ~7 GB of video;
++#   * each upload stays far inside the ASR length limit.
++# Parts are transcribed independently and concatenated in order.
++DEFAULT_SEGMENT_SECONDS = 1800            # 30 min of audio per part
++DEFAULT_SEGMENT_THRESHOLD_SECONDS = 3600  # only segment beyond 1 h
++FFMPEG_UA = (
++    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
++    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
++)
++
+ # --- Image-post (图文) OCR via a vision LLM -------------------------------
+ # Image posts carry their real content inside the pictures. Douyin's
+ # ``video.play_addr`` for these items is only the background-music MP3, so ASR
+@@ -325,15 +344,43 @@ def _download_media(url: str, destination: Path, max_bytes: int) -> str | None:
+     return None if destination.exists() and destination.stat().st_size > 0 else "failed"
+ 
+ 
++def _ffmpeg_exe() -> str | None:
++    """Locate an ffmpeg binary, or None.
++
++    Order: explicit ``DOUYIN_ASR_FFMPEG`` -> ``PATH`` -> the static build bundled
++    with ``imageio-ffmpeg``. That last fallback matters: on the machine this
++    pipeline was validated on ffmpeg is *not* on ``PATH``, so ``_extract_audio``
++    used to bail out and upload the raw video file instead of compact audio.
++    The bundled build is a full one (libmp3lame, http/https, ``-reconnect``).
++    """
++    explicit = (os.environ.get("DOUYIN_ASR_FFMPEG") or "").strip()
++    if explicit and Path(explicit).exists():
++        return explicit
++    found = shutil.which("ffmpeg")
++    if found:
++        return found
++    try:
++        import imageio_ffmpeg  # type: ignore
++
++        bundled = imageio_ffmpeg.get_ffmpeg_exe()
++    except Exception:  # noqa: BLE001
++        return None
++    return bundled if bundled and Path(bundled).exists() else None
++
++
+ def _extract_audio(source: Path, audio: Path) -> bool:
+-    if not shutil.which("ffmpeg"):
++    exe = _ffmpeg_exe()
++    if not exe:
+         return False
+     rate, bitrate = _audio_encode_settings()
+     completed = subprocess.run(
+         [
+-            "ffmpeg",
++            exe,
+             "-nostdin",
+             "-y",
++            "-hide_banner",
++            "-loglevel",
++            "error",
+             "-i",
+             str(source),
+             "-vn",
+@@ -364,6 +411,103 @@ def _prepare_upload(source: Path, root: Path) -> Path:
+     return source
+ 
+ 
++def _segment_settings() -> tuple[int, int]:
++    """Return ``(segment_seconds, threshold_seconds)`` for long-media splitting."""
++    try:
++        segment = int((os.environ.get("DOUYIN_ASR_SEGMENT_SECONDS") or "").strip() or DEFAULT_SEGMENT_SECONDS)
++    except ValueError:
++        segment = DEFAULT_SEGMENT_SECONDS
++    try:
++        threshold = int(
++            (os.environ.get("DOUYIN_ASR_SEGMENT_THRESHOLD_SECONDS") or "").strip()
++            or DEFAULT_SEGMENT_THRESHOLD_SECONDS
++        )
++    except ValueError:
++        threshold = DEFAULT_SEGMENT_THRESHOLD_SECONDS
++    return max(60, segment), max(60, threshold)
++
++
++def _stream_audio_segments(url: str, root: Path, segment_seconds: int, duration: float) -> list[Path]:
++    """Stream ``url`` through ffmpeg, keep audio only, split into ordered mp3 parts.
++
++    The video stream never reaches the disk — that is what makes an 8 h item
++    feasible, since its audio is ~250 MB while its video stream is several GB.
++    ``-reconnect`` keeps a long pull alive across transient CDN hiccups.
++    """
++    exe = _ffmpeg_exe()
++    if not exe:
++        return []
++    rate, bitrate = _audio_encode_settings()
++    headers = (
++        "Referer: https://www.douyin.com/\r\n"
++        f"User-Agent: {FFMPEG_UA}\r\n"
++    )
++    pattern = root / "part-%03d.mp3"
++    timeout = int(max(1800, duration * 2))
++    try:
++        completed = subprocess.run(
++            [
++                exe,
++                "-nostdin",
++                "-y",
++                "-hide_banner",
++                "-loglevel",
++                "error",
++                "-headers",
++                headers,
++                "-reconnect",
++                "1",
++                "-reconnect_streamed",
++                "1",
++                "-reconnect_delay_max",
++                "10",
++                "-i",
++                url,
++                "-vn",
++                "-ac",
++                "1",
++                "-ar",
++                rate,
++                "-b:a",
++                bitrate,
++                "-f",
++                "segment",
++                "-segment_time",
++                str(segment_seconds),
++                "-reset_timestamps",
++                "1",
++                str(pattern),
++            ],
++            capture_output=True,
++            text=True,
++            timeout=timeout,
++            check=False,
++        )
++    except (OSError, subprocess.TimeoutExpired, TimeoutError):
++        return []
++    parts = sorted(p for p in root.glob("part-*.mp3") if p.stat().st_size > 0)
++    # A non-zero exit may still leave usable parts (e.g. the pull died near the
++    # end); only give up when nothing at all was produced.
++    if not parts and completed.returncode != 0:
++        return []
++    return parts
++
++
++def _transcribe_parts(parts: list[Path], api_key: str, model: str, endpoint: str) -> tuple[str, int]:
++    """Upload each part in order; return ``(joined_text, parts_ok)``."""
++    blocks: list[str] = []
++    ok = 0
++    for part in parts:
++        try:
++            text = _upload_transcribe(part, api_key, model, endpoint)
++        except (OSError, TimeoutError, urllib.error.HTTPError, urllib.error.URLError):
++            text = ""
++        if text:
++            ok += 1
++            blocks.append(text)
++    return "\n\n".join(blocks).strip(), ok
++
++
+ def _upload_transcribe(path: Path, api_key: str, model: str, endpoint: str) -> str:
+     import json
+     import uuid
+@@ -440,10 +584,38 @@ def transcribe(item: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+     endpoint = str(os.environ.get("SILICONFLOW_ASR_URL") or DEFAULT_ENDPOINT).strip()
+ 
+     last_status = "failed"
++    try:
++        duration = max(0.0, float(item.get("duration_seconds") or 0))
++    except (TypeError, ValueError):
++        duration = 0.0
++    segment_seconds, segment_threshold = _segment_settings()
++
+     try:
+         with tempfile.TemporaryDirectory(prefix=TEMP_PREFIX) as temp_dir:
+             root = Path(temp_dir)
+             for kind, url in candidates:
++                if duration >= segment_threshold and _ffmpeg_exe():
++                    # Long item: stream + split instead of downloading the whole
++                    # video stream. See DEFAULT_SEGMENT_SECONDS for the rationale.
++                    seg_root = root / "segments"
++                    seg_root.mkdir(exist_ok=True)
++                    parts = _stream_audio_segments(url, seg_root, segment_seconds, duration)
++                    if parts:
++                        body, ok = _transcribe_parts(parts, api_key, model, endpoint)
++                        if body:
++                            return {
++                                "transcript": body,
++                                "transcript_source": "siliconflow_sensevoice_segmented",
++                                "transcript_status": "success",
++                                "media_kind_used": kind,
++                                "segments_total": len(parts),
++                                "segments_ok": ok,
++                                "segment_seconds": segment_seconds,
++                            }
++                        last_status = "failed"
++                    else:
++                        last_status = "failed"
++                    # Fall through to the plain download path as a safety net.
+                 media_path = root / f"source-{kind}{_suffix_for_url(url)}"
+                 err = _download_media(url, media_path, max_media_bytes)
+                 if err:

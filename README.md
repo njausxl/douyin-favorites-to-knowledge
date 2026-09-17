@@ -5,23 +5,25 @@
 > **Fork 自 [tars1230/douyin-favorites-to-knowledge](https://github.com/tars1230/douyin-favorites-to-knowledge)**
 > （Gitee 镜像：[gitee.com/tars123/douyin-favorites-to-knowledge](https://gitee.com/tars123/douyin-favorites-to-knowledge)），基于上游 **v2.3.0**。
 >
-> 本 fork 补上了上游缺失的**两条正文通道**：
+> 本 fork 补上了上游缺失的**三条正文通道**：
 >
 > - 🖼️ **图文帖 OCR** —— 上游只有语音识别（ASR）。但图文帖的 `video.play_addr` 其实是**背景音乐 MP3**，ASR 对着纯音乐跑只会产出幻觉噪声（`🎼你生看。`），状态却标成 `success`；**图里的正文一个字都抓不到**。
 > - 📄 **长文正文抓取** —— 抖音长文（`aweme_type=163`）的正文不在音轨里，且收藏列表接口返回的 `article_info` 是**截断在 499 字的预览**，必须走 `aweme/detail` 才能取到全文。
+> - ⏱️ **超长视频切段转录** —— 2 小时以上的视频在上游会死在两个地方：超长音频超出 SenseVoice 单次请求上限（2.5h / 9.7h 报 `failed`），以及视频流体积超下载上限（8.8h 报 `too_large`，按 `br×时长` 估约 14.6 GB）。本 fork 对这类条目**不下载视频流**，改用 ffmpeg 直接拉签名 URL、只留音频、按 30 分钟切段分别转录后拼接 —— 8 小时视频只落约 250 MB 音频。顺带修掉一个静默故障：本机 ffmpeg 不在 `PATH` 上，导致 `_extract_audio()` 一直失败并回退成「上传原始视频」，现在会回退到 `imageio-ffmpeg` 自带的完整静态构建。
 >
-> 改动上游 **4 个文件**（`+437 / −9`），以 commit 形式提交，可直接 diff 查看改了什么。
+> 改动上游 **5 个文件**（`+611 / −11`），以 commit 形式提交，可直接 diff 查看改了什么。
 >
 > | 内容 | 位置 |
 > | --- | --- |
-> | 对上游的补丁 | [`patches/0001-ocr-and-article-support.patch`](patches/0001-ocr-and-article-support.patch) |
+> | 对上游的补丁 ①（图文帖 OCR + 长文正文） | [`patches/0001-ocr-and-article-support.patch`](patches/0001-ocr-and-article-support.patch) |
+> | 对上游的补丁 ②（超长视频切段转录） | [`patches/0002-segment-long-media.patch`](patches/0002-segment-long-media.patch) |
 > | 技能包（拷进 skills 目录即可用） | [`extras/douyin-image-post-ocr/`](extras/douyin-image-post-ocr/) |
 > | 实测报告与架构图 | [`docs/`](docs/) |
 > | 完整落地过程长文 | [`posts/`](posts/) |
 >
 > 独立技能包仓库：<https://github.com/njausxl/douyin-image-post-ocr>
 >
-> **实测规模**：932 条收藏 → 154 条图文帖 + 38 条长文；知识库 306 → **366** 条笔记，补回约 **24 万字**正文。视觉模型用 `Qwen/Qwen3-VL-30B-A3B-Instruct`；长文通道零 API 成本。
+> **实测规模**：961 条收藏 → 162 条图文帖 + 38 条长文；知识库 306 → **632** 条笔记，正文合计约 **271 万字**。视觉模型用 `Qwen/Qwen3-VL-30B-A3B-Instruct`；长文通道零 API 成本。
 >
 > 上游代码版权归原作者所有（MIT）。本 fork 的新增内容同样以 MIT 发布。
 

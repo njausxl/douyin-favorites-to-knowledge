@@ -1,5 +1,23 @@
 # Changelog
 
+## [fork-2.3.0.2] - 2026-09-17
+
+### Added
+- **超长视频切段转录**：时长超过阈值（默认 1 小时）的条目**不再下载视频流**，改为让 ffmpeg 直接拉签名
+  `play_url`、丢弃视频、只保留音频并按 30 分钟切段（`-f segment`），逐段上传 SenseVoice 后按序拼接。
+  一个方案同时解决两类失败：超长音频超出 ASR 单次请求上限（长视频报 `failed`，实测 ≤2 小时稳定、
+  2.5 小时起必挂），以及视频流体积超下载上限（8.8 小时视频按 `br×时长` 估约 14.6 GB，报 `too_large`）。
+  副产品：8 小时视频只落约 250 MB 音频，而非十几 GB 视频流。
+  新增环境变量 `DOUYIN_ASR_SEGMENT_THRESHOLD_SECONDS`（默认 3600）/ `DOUYIN_ASR_SEGMENT_SECONDS`
+  （默认 1800）/ `DOUYIN_ASR_FFMPEG`（显式指定 ffmpeg）。切段成功的条目
+  `transcript_source` 为 `siliconflow_sensevoice_segmented`，并带 `segments_total` / `segments_ok`。
+
+### Fixed
+- `_ffmpeg_exe()`：ffmpeg 不在 `PATH` 上时回退到 `imageio-ffmpeg` 自带的完整静态构建
+  （含 libmp3lame / http / https / `-reconnect`）。此前 `shutil.which("ffmpeg")` 返回空会让
+  `_extract_audio()` **静默失败**，`_prepare_upload()` 于是回退成「直接上传原始视频文件」——
+  既慢，又容易在下载阶段撞上 `max_media_bytes`。
+
 ## [2.3.0] - 2026-08-12
 
 ### Added
